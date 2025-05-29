@@ -4,6 +4,9 @@ export enum StoryErrorType {
   InternalServerError = "INTERNAL_SERVER_ERROR",
   InvalidToken = "INVALID_TOKEN",
   Unauthorized = "UNAUTHORIZED",
+  FailedToGenerateStory = "FAILED_TO_GENERATE_STORY",
+  InvalidBodyField = "INVALID_BODY_FIELD",
+  LlmAgentFailed = "LLM_AGENT_FAILED",
 }
 
 export class StoryError extends HttpException {

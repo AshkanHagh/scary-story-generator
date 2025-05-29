@@ -3,17 +3,20 @@ import { DATABASE } from "./constant";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
+import { ConfigService } from "@nestjs/config";
+import { IDbConfig } from "src/configs/db.config";
 
 @Module({
   providers: [
     {
       provide: DATABASE,
-      useFactory() {
-        const url = process.env.DATABASE_URL;
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const dbConfig = config.get<IDbConfig>("db");
 
         const pool = new Pool({
-          connectionString: url,
-          max: 10,
+          connectionString: dbConfig?.postgres.url,
+          max: 5,
           ssl: process.env.NODE_ENV === "production",
         });
 

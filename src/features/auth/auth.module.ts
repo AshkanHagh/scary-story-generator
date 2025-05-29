@@ -16,6 +16,6 @@ import { AnonymousAuthGuard } from "./guards/anonymous-auth.guard";
     AnonymousJwtStrategy,
     AnonymousAuthGuard,
   ],
-  exports: [AnonymousAuthGuard],
+  exports: [AnonymousAuthGuard, AnonymousJwtStrategy],
 })
 export class AuthModule {}

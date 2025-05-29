@@ -1,4 +1,6 @@
+import { relations } from "drizzle-orm";
 import { pgTable } from "drizzle-orm/pg-core";
+import { StoryTable } from "./story.schema";
 
 export const UserTable = pgTable("users", (table) => {
   return {
@@ -13,6 +15,10 @@ export const UserTable = pgTable("users", (table) => {
       .$onUpdate(() => new Date()),
   };
 });
+
+export const UserRelation = relations(UserTable, ({ many }) => ({
+  stories: many(StoryTable),
+}));
 
 export type IUser = typeof UserTable.$inferSelect;
 export type IUserInsertForm = typeof UserTable.$inferInsert;

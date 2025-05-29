@@ -22,6 +22,14 @@ services:
     volumes:
       - minio_data:/data
 
+  redis:
+    image: registry.docker.ir/redis:8.0.1
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/var/lib/redis/data
+
 volumes:
   postgres_data:
   minio_data:
+  redis_data:

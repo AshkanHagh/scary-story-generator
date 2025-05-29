@@ -1,6 +1,8 @@
 import { DynamicModule, Module } from "@nestjs/common";
 import { ConfigModule as BaseConfigModule } from "@nestjs/config";
 import { authConfig } from "./auth.config";
+import { aiConfig } from "./ai.config";
+import { dbConfig } from "./db.config";
 
 @Module({})
 export class ConfigModule {
@@ -9,7 +11,7 @@ export class ConfigModule {
       isGlobal: true,
       cache: true,
       expandVariables: true,
-      load: [authConfig],
+      load: [authConfig, aiConfig, dbConfig],
     });
   }
 }
