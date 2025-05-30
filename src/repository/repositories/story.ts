@@ -8,6 +8,7 @@ import {
   StoryTable,
 } from "src/drizzle/schema/story.schema";
 import { eq } from "drizzle-orm";
+import { StoryError, StoryErrorType } from "src/filter/exception";
 
 @Injectable()
 export class StoryRepository implements IStoryRepository {
@@ -20,5 +21,20 @@ export class StoryRepository implements IStoryRepository {
 
   async update(id: string, form: Partial<IStoryInsertForm>): Promise<void> {
     await this.db.update(StoryTable).set(form).where(eq(StoryTable.id, id));
+  }
+
+  async userHasAccess(storyId: string, userId: string): Promise<IStory> {
+    const story = await this.db.query.StoryTable.findFirst({
+      where: eq(StoryTable.id, storyId),
+    });
+
+    if (!story) {
+      throw new StoryError(StoryErrorType.NotFound);
+    }
+    if (story.userId !== userId) {
+      throw new StoryError(StoryErrorType.HasNoPermission);
+    }
+
+    return story;
   }
 }

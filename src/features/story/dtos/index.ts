@@ -7,3 +7,9 @@ export const CreateStorySchema = z.object({
 });
 
 export type CreateStoryDto = z.infer<typeof CreateStorySchema>;
+
+export const CreateSegmentSchema = z.object({
+  isVertical: z.boolean(),
+});
+
+export type CreateSegmentDto = z.infer<typeof CreateSegmentSchema>;

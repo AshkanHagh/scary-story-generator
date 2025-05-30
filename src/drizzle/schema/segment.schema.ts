@@ -11,7 +11,10 @@ export const SegmentTable = pgTable("segments", (table) => {
       .references(() => StoryTable.id),
     order: table.integer().notNull().default(0),
     text: table.text().notNull(),
-    isGenerating: table.boolean().notNull().default(true),
+    prompt: table.text(),
+    imageId: table.text(),
+    previewImageId: table.text(),
+    isGenerating: table.boolean().notNull().default(false),
     createdAt: table.timestamp().notNull().defaultNow(),
     updatedAt: table
       .timestamp()

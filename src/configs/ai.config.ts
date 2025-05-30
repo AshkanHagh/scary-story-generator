@@ -7,6 +7,9 @@ export const aiConfig = registerAs("ai", () => {
       endpoint: process.env.LIARA_OPEN_AI_ENDPINT,
       secret: process.env.LIARA_OPEN_AI_SECRET,
     },
+    replicate: {
+      secret: process.env.REPLICATE_API_TOKEN!,
+    },
   };
 });
 

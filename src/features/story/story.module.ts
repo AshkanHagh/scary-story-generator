@@ -11,10 +11,14 @@ import { AuthModule } from "../auth/auth.module";
     RepositoryModule,
     AuthModule,
     BullModule.registerQueue({
-      name: WorkerEvents.GENERATE_GUIDED_STORY,
+      name: WorkerEvents.Story,
+    }),
+    BullModule.registerQueue({
+      name: WorkerEvents.Image,
     }),
   ],
   providers: [StoryService],
   controllers: [StoryController],
+  exports: [StoryService],
 })
 export class StoryModule {}

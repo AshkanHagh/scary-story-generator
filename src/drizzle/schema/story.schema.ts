@@ -19,6 +19,8 @@ export const StoryTable = pgTable("stories", (table) => {
     title: table.varchar({ length: 128 }).notNull(),
     script: table.varchar({ length: 10_000 }).notNull(),
     status: StoryStatusEnum().default("processing"),
+    isVertical: table.boolean().notNull().default(false),
+    context: table.text(),
     createdAt: table.timestamp().notNull().defaultNow(),
     updatedAt: table
       .timestamp()

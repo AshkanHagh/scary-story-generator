@@ -1,4 +1,9 @@
-import { IUser, IUserInsertForm } from "src/drizzle/schema";
+import {
+  ISegment,
+  ISegmentInsertForm,
+  IUser,
+  IUserInsertForm,
+} from "src/drizzle/schema";
 import { IStory, IStoryInsertForm } from "src/drizzle/schema/story.schema";
 
 export interface IUserRepository {
@@ -10,4 +15,10 @@ export interface IUserRepository {
 export interface IStoryRepository {
   insert(form: IStoryInsertForm): Promise<IStory>;
   update(id: string, form: Partial<IStoryInsertForm>): Promise<void>;
+  userHasAccess(storyId: string, userId: string): Promise<IStory>;
+}
+
+export interface ISegmentRepository {
+  insert(form: ISegmentInsertForm): Promise<ISegment>;
+  update(id: string, form: Partial<ISegmentInsertForm>): Promise<void>;
 }

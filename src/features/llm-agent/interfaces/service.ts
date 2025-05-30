@@ -1,3 +1,11 @@
+import { ImageGenerationOptions } from "../types";
+
 export interface IStoryAgentService {
   generateGuidedStory(prompt: string): Promise<string>;
+  generateStoryContext(script: string): Promise<string>;
+  generateSegmentImagePrompt(context: string, segment: string): Promise<string>;
+}
+
+export interface IImageAgentService {
+  generateImageUsingFlux(options: ImageGenerationOptions): Promise<string>;
 }

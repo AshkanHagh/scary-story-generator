@@ -7,6 +7,9 @@ export enum StoryErrorType {
   FailedToGenerateStory = "FAILED_TO_GENERATE_STORY",
   InvalidBodyField = "INVALID_BODY_FIELD",
   LlmAgentFailed = "LLM_AGENT_FAILED",
+  NotFound = "NOT_FOUND",
+  HasNoPermission = "HAS_NO_PERMISSION",
+  FailedToGenerateImage = "FAILED_TO_GENERATE_IMAGE",
 }
 
 export class StoryError extends HttpException {
