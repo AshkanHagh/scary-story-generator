@@ -9,12 +9,15 @@ import {
   GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
   GenerateSegmentImageJobData,
+  RegenrateSegmentImageJobData,
 } from "src/worker/types";
+import { StoryError, StoryErrorType } from "src/filter/exception";
 
 @Injectable()
 export class StoryService implements IStoryService {
   constructor(
     @InjectQueue(WorkerEvents.Story) private storyQueue: Queue,
+    @InjectQueue(WorkerEvents.Image) private imageQueue: Queue,
     private repo: RepositoryService,
   ) {}
 
@@ -83,5 +86,28 @@ export class StoryService implements IStoryService {
       StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE,
       jobData,
     );
+  }
+
+  async generateSegmentImage(segmentId: string, prompt: string): Promise<void> {
+    const segment = await this.repo.segment().find(segmentId);
+    if (!segment) {
+      throw new StoryError(StoryErrorType.FailedToGenerateStory);
+    }
+
+    const story = await this.repo.story().find(segment.storyId);
+    if (!story) {
+      throw new StoryError(StoryErrorType.FailedToGenerateStory);
+    }
+
+    await this.repo.segment().update(segment.id, { isGenerating: true });
+
+    const isVertical = story.isVertical ?? false;
+
+    const jobData: RegenrateSegmentImageJobData = {
+      prompt: prompt,
+      segmentId: segment.id,
+      isVertical,
+    };
+    await this.imageQueue.add("generate.image", jobData);
   }
 }

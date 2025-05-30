@@ -10,6 +10,7 @@ export enum StoryErrorType {
   NotFound = "NOT_FOUND",
   HasNoPermission = "HAS_NO_PERMISSION",
   FailedToGenerateImage = "FAILED_TO_GENERATE_IMAGE",
+  UploadOutfitFailed = "UPLOAD_OUTFIT_FAILED",
 }
 
 export class StoryError extends HttpException {

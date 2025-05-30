@@ -15,4 +15,10 @@ export interface IStoryService {
     order: number,
     context: string,
   ): Promise<void>;
+
+  generateSegmentImage(segmentId: string, prompt: string): Promise<void>;
+}
+
+export interface IS3Service {
+  putObject(id: string, mimetype: string, buffer: Buffer): Promise<string>;
 }

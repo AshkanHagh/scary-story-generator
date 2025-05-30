@@ -37,4 +37,13 @@ export class StoryRepository implements IStoryRepository {
 
     return story;
   }
+
+  async find(id: string): Promise<IStory | undefined> {
+    const [story] = await this.db
+      .select()
+      .from(StoryTable)
+      .where(eq(StoryTable.id, id));
+
+    return story;
+  }
 }

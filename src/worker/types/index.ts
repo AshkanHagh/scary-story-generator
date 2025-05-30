@@ -19,4 +19,5 @@ export type GenerateSegmentImageJobData = {
 export type RegenrateSegmentImageJobData = {
   segmentId: string;
   prompt: string;
+  isVertical: boolean;
 };

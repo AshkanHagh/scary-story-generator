@@ -16,9 +16,11 @@ export interface IStoryRepository {
   insert(form: IStoryInsertForm): Promise<IStory>;
   update(id: string, form: Partial<IStoryInsertForm>): Promise<void>;
   userHasAccess(storyId: string, userId: string): Promise<IStory>;
+  find(id: string): Promise<IStory | undefined>;
 }
 
 export interface ISegmentRepository {
   insert(form: ISegmentInsertForm): Promise<ISegment>;
   update(id: string, form: Partial<ISegmentInsertForm>): Promise<void>;
+  find(id: string): Promise<ISegment | undefined>;
 }

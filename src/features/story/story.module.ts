@@ -5,6 +5,7 @@ import { RepositoryModule } from "src/repository/repository.module";
 import { BullModule } from "@nestjs/bullmq";
 import { WorkerEvents } from "src/worker/event";
 import { AuthModule } from "../auth/auth.module";
+import { S3Service } from "./services/s3.service";
 
 @Module({
   imports: [
@@ -17,8 +18,8 @@ import { AuthModule } from "../auth/auth.module";
       name: WorkerEvents.Image,
     }),
   ],
-  providers: [StoryService],
+  providers: [StoryService, S3Service],
   controllers: [StoryController],
-  exports: [StoryService],
+  exports: [StoryService, S3Service],
 })
 export class StoryModule {}

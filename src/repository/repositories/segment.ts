@@ -21,4 +21,13 @@ export class SegmentRepository implements ISegmentRepository {
   async update(id: string, form: Partial<ISegmentInsertForm>): Promise<void> {
     await this.db.update(SegmentTable).set(form).where(eq(SegmentTable.id, id));
   }
+
+  async find(id: string): Promise<ISegment | undefined> {
+    const [segment] = await this.db
+      .select()
+      .from(SegmentTable)
+      .where(eq(SegmentTable.id, id));
+
+    return segment;
+  }
 }

@@ -1,13 +1,12 @@
-import { InjectQueue, Processor, WorkerHost } from "@nestjs/bullmq";
+import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { StoryJobNames, WorkerEvents } from "../event";
-import { Job, Queue } from "bullmq";
+import { Job } from "bullmq";
 import { StoryAgentService } from "src/features/llm-agent/services/story-agent.service";
 import { RepositoryService } from "src/repository/repository.service";
 import {
   GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
   GenerateSegmentImageJobData,
-  RegenrateSegmentImageJobData,
 } from "../types";
 import { StoryService } from "src/features/story/story.service";
 
@@ -17,7 +16,6 @@ export class StoryWorker extends WorkerHost {
     private storyAgent: StoryAgentService,
     private repo: RepositoryService,
     private storyService: StoryService,
-    @InjectQueue(WorkerEvents.Image) private imageAgent: Queue,
   ) {
     super();
   }
@@ -99,10 +97,6 @@ export class StoryWorker extends WorkerHost {
       payload.segment,
     );
 
-    const jobData: RegenrateSegmentImageJobData = {
-      prompt: prompt,
-      segmentId: payload.segmentId,
-    };
-    await this.imageAgent.add("generate.image", jobData);
+    await this.storyService.generateSegmentImage(payload.segmentId, prompt);
   }
 }
