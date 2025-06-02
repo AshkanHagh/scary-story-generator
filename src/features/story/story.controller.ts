@@ -44,4 +44,15 @@ export class StoryController implements IStoryController {
     await this.storyService.generateSegment(userId, storyId, payload);
     return res.status(HttpStatus.NO_CONTENT).json();
   }
+
+  @Post("/video/:story_id")
+  async generateVideo(
+    @User("id") userId: string,
+    @Param("story_id") storyId: string,
+    @Res() res: Response,
+  ): Promise<Response> {
+    await this.storyService.generateVideo(userId, storyId);
+
+    return res.status(HttpStatus.NO_CONTENT).json();
+  }
 }

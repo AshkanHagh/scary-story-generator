@@ -12,8 +12,9 @@ export const SegmentTable = pgTable("segments", (table) => {
     order: table.integer().notNull().default(0),
     text: table.text().notNull(),
     prompt: table.text(),
-    imageUrl: table.text(),
-    previewImageUrl: table.text(),
+    imageId: table.text(),
+    previewImageId: table.text(),
+    voiceId: table.text(),
     isGenerating: table.boolean().notNull().default(false),
     createdAt: table.timestamp().notNull().defaultNow(),
     updatedAt: table

@@ -9,4 +9,9 @@ export interface IStoryController {
     payload: CreateSegmentDto,
     res: Response,
   ): Promise<Response>;
+  generateVideo(
+    userId: string,
+    storyId: string,
+    res: Response,
+  ): Promise<Response>;
 }

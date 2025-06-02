@@ -17,6 +17,7 @@ export interface IStoryService {
   ): Promise<void>;
 
   generateSegmentImage(segmentId: string, prompt: string): Promise<void>;
+  generateVideo(userId: string, storyId: string): Promise<void>;
 }
 
 export interface IS3Service {

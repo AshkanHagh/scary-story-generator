@@ -82,10 +82,14 @@ export class StoryService implements IStoryService {
       context,
       segment: text,
     };
-    await this.storyQueue.add(
-      StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE,
-      jobData,
-    );
+
+    await Promise.all([
+      this.storyQueue.add(
+        StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE,
+        jobData,
+      ),
+      this.storyQueue.add(StoryJobNames.GENERATE_SEGMENT_VOICE, jobData),
+    ]);
   }
 
   async generateSegmentImage(segmentId: string, prompt: string): Promise<void> {
@@ -109,5 +113,35 @@ export class StoryService implements IStoryService {
       isVertical,
     };
     await this.imageQueue.add("generate.image", jobData);
+  }
+
+  async generateVideo(userId: string, storyId: string): Promise<void> {
+    const story = await this.repo.db().query.StoryTable.findFirst({
+      where: (table, funcs) => funcs.eq(table.id, storyId),
+      with: {
+        segments: {
+          columns: {
+            id: true,
+          },
+        },
+      },
+      columns: {
+        id: true,
+        userId: true,
+      },
+    });
+
+    if (!story) {
+      throw new StoryError(StoryErrorType.NotFound);
+    }
+    if (story.userId !== userId) {
+      throw new StoryError(StoryErrorType.HasNoPermission);
+    }
+
+    await Promise.all([
+      story.segments.map(async (segment) => {
+        console.log(`Generating video for segment ${segment.id}`);
+      }),
+    ]);
   }
 }

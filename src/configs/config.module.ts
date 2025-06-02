@@ -3,7 +3,7 @@ import { ConfigModule as BaseConfigModule } from "@nestjs/config";
 import { authConfig } from "./auth.config";
 import { aiConfig } from "./ai.config";
 import { dbConfig } from "./db.config";
-import { s3Config } from "./s3.config";
+import { awsConfig } from "./aws.config";
 
 @Module({})
 export class ConfigModule {
@@ -12,7 +12,7 @@ export class ConfigModule {
       isGlobal: true,
       cache: true,
       expandVariables: true,
-      load: [authConfig, aiConfig, dbConfig, s3Config],
+      load: [authConfig, aiConfig, dbConfig, awsConfig],
     });
   }
 }

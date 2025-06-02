@@ -15,7 +15,7 @@ export class StoryAgentService implements IStoryAgentService {
 
   constructor(@AiConfig() private config: IAiConfig) {
     this.openai = new OpenAI({
-      baseURL: this.config.openai.endpoint,
+      // baseURL: this.config.openai.endpoint,
       apiKey: this.config.openai.secret,
     });
   }
@@ -23,7 +23,7 @@ export class StoryAgentService implements IStoryAgentService {
   async generateGuidedStory(prompt: string): Promise<string> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "openai/gpt-4o-mini",
+        model: "gpt-4o-mini",
         temperature: 0.8,
         messages: [
           {
@@ -54,7 +54,7 @@ export class StoryAgentService implements IStoryAgentService {
   async generateStoryContext(script: string): Promise<string> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "openai/gpt-4o-mini",
+        model: "gpt-4o-mini",
         temperature: 0.7,
         messages: [
           {
@@ -88,7 +88,7 @@ export class StoryAgentService implements IStoryAgentService {
   ): Promise<string> {
     try {
       const response = await this.openai.chat.completions.create({
-        model: "openai/gpt-4o-mini",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -126,6 +126,20 @@ export class StoryAgentService implements IStoryAgentService {
 
       const prompt = JSON.parse(promptString) as GenerateSegmentImagePrompt;
       return prompt.prompt;
+    } catch (error: unknown) {
+      throw new StoryError(StoryErrorType.LlmAgentFailed, error);
+    }
+  }
+
+  async generateSegmentVoice(segment: string): Promise<Buffer> {
+    try {
+      const response = await this.openai.audio.speech.create({
+        input: segment,
+        model: "gpt-4o-mini-tts",
+        voice: "onyx",
+      });
+
+      return Buffer.from(await response.arrayBuffer());
     } catch (error: unknown) {
       throw new StoryError(StoryErrorType.LlmAgentFailed, error);
     }
