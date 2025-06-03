@@ -135,7 +135,6 @@ export class StoryAgentService implements IStoryAgentService {
     }
   }
 
-  // NOTE: currently my openai plan dose not support voice generation so we use pre-recorded audio
   async generateSegmentVoice(segment: string): Promise<Buffer> {
     try {
       const response = await this.openai.audio.speech.create({
@@ -145,11 +144,6 @@ export class StoryAgentService implements IStoryAgentService {
       });
 
       return Buffer.from(await response.arrayBuffer());
-
-      // const voiceUrl =
-      //   "http://localhost:9000/scary-story-generator/2a103384-be10-4ee7-99d5-63105897fe4c";
-      // const response = await fetch(voiceUrl);
-      // return Buffer.from(await response.arrayBuffer());
     } catch (error: unknown) {
       throw new StoryError(StoryErrorType.LlmAgentFailed, error);
     }
