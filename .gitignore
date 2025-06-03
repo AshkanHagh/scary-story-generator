@@ -61,3 +61,4 @@ package-lock.json*
 
 # NOT COMPLETED YET(WEB SOCKET)
 ws/
+tmp/

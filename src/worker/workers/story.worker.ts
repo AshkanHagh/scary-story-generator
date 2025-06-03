@@ -7,8 +7,11 @@ import {
   GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
   GenerateSegmentImageJobData,
+  GenerateSegmentVoiceJobData,
 } from "../types";
 import { StoryService } from "src/features/story/story.service";
+import { S3Service } from "src/features/story/services/s3.service";
+import { v4 as uuid } from "uuid";
 
 @Processor(WorkerEvents.Story, { concurrency: 4 })
 export class StoryWorker extends WorkerHost {
@@ -16,43 +19,41 @@ export class StoryWorker extends WorkerHost {
     private storyAgent: StoryAgentService,
     private repo: RepositoryService,
     private storyService: StoryService,
+    private s3: S3Service,
   ) {
     super();
   }
 
   async process(job: Job): Promise<void> {
     try {
+      console.log("Processing job:", job.name);
+
       switch (job.name) {
         case StoryJobNames.GENERATE_GUIDED_STORY as string: {
-          console.log("Processing job:", job.name);
-
           const payload = job.data as GenerateGuidedStoryJobData;
           await this.generateGuidedStory(payload);
 
-          console.log("Job processed successfully:", job.name);
           break;
         }
         case StoryJobNames.GENERATE_IMAGE_CONTEXT as string: {
-          console.log("Processing job:", job.name);
-
           const payload = job.data as GenerateImageContextJobData;
           await this.generateImageContext(payload);
-
-          console.log("Job processed successfully:", job.name);
 
           break;
         }
         case StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE as string: {
-          console.log("Processing job:", job.name);
-
           const payload = job.data as GenerateSegmentImageJobData;
           await this.generateSegmentImage(payload);
 
-          console.log("Job processed successfully:", job.name);
-
           break;
         }
+        case StoryJobNames.GENERATE_SEGMENT_VOICE as string: {
+          const payload = job.data as GenerateSegmentVoiceJobData;
+          await this.generateSegmentVoice(payload);
+        }
       }
+
+      console.log("Job processed successfully:", job.name);
     } catch (error: unknown) {
       console.log("Error processing job:", job.name);
       console.log(error);
@@ -98,5 +99,15 @@ export class StoryWorker extends WorkerHost {
     );
 
     await this.storyService.generateSegmentImage(payload.segmentId, prompt);
+  }
+
+  private async generateSegmentVoice(
+    payload: GenerateSegmentVoiceJobData,
+  ): Promise<void> {
+    const buffer = await this.storyAgent.generateSegmentVoice(payload.segment);
+
+    const voiceId = uuid();
+    await this.s3.putObject(voiceId, "audio/mpeg", buffer);
+    await this.repo.segment().update(payload.segmentId, { voiceId });
   }
 }

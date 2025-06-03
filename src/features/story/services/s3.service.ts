@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { IS3Service } from "../interfaces/service";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { AwsConfig, IAwsConfig } from "src/configs/aws.config";
 
@@ -38,7 +42,21 @@ export class S3Service implements IS3Service {
 
       return url;
     } catch (error: unknown) {
-      throw new StoryError(StoryErrorType.UploadOutfitFailed, error);
+      throw new StoryError(StoryErrorType.S3ReqFailed, error);
+    }
+  }
+
+  async getObject(id: string): Promise<Buffer> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: this.config.s3.bucketName,
+        Key: id,
+      });
+
+      const response = await this.client.send(command);
+      return Buffer.from(await response.Body!.transformToByteArray());
+    } catch (error: unknown) {
+      throw new StoryError(StoryErrorType.S3ReqFailed, error);
     }
   }
 }

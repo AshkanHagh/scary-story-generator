@@ -6,11 +6,13 @@ import { BullModule } from "@nestjs/bullmq";
 import { WorkerEvents } from "src/worker/event";
 import { AuthModule } from "../auth/auth.module";
 import { S3Service } from "./services/s3.service";
+import { LlmAgentModule } from "../llm-agent/llm-agent.module";
 
 @Module({
   imports: [
     RepositoryModule,
     AuthModule,
+    LlmAgentModule,
     BullModule.registerQueue({
       name: WorkerEvents.Story,
     }),

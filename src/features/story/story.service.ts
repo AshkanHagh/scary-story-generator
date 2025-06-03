@@ -3,15 +3,21 @@ import { IStoryService } from "./interfaces/service";
 import { CreateSegmentDto, CreateStoryDto } from "./dtos";
 import { RepositoryService } from "src/repository/repository.service";
 import { InjectQueue } from "@nestjs/bullmq";
-import { StoryJobNames, WorkerEvents } from "src/worker/event";
+import { ImageJobNames, StoryJobNames, WorkerEvents } from "src/worker/event";
 import { Queue } from "bullmq";
 import {
+  DownloadSegmentAssetJobData,
   GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
+  GenerateImageFrameJobData,
   GenerateSegmentImageJobData,
   RegenrateSegmentImageJobData,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
+import { S3Service } from "./services/s3.service";
+import { ISegment } from "src/drizzle/schema";
+import { StoryAgentService } from "../llm-agent/services/story-agent.service";
+import * as fs from "fs/promises";
 
 @Injectable()
 export class StoryService implements IStoryService {
@@ -19,6 +25,8 @@ export class StoryService implements IStoryService {
     @InjectQueue(WorkerEvents.Story) private storyQueue: Queue,
     @InjectQueue(WorkerEvents.Image) private imageQueue: Queue,
     private repo: RepositoryService,
+    private s3: S3Service,
+    private storyAgent: StoryAgentService,
   ) {}
 
   async createStory(userId: string, payload: CreateStoryDto): Promise<string> {
@@ -112,18 +120,14 @@ export class StoryService implements IStoryService {
       segmentId: segment.id,
       isVertical,
     };
-    await this.imageQueue.add("generate.image", jobData);
+    await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE, jobData);
   }
 
   async generateVideo(userId: string, storyId: string): Promise<void> {
     const story = await this.repo.db().query.StoryTable.findFirst({
       where: (table, funcs) => funcs.eq(table.id, storyId),
       with: {
-        segments: {
-          columns: {
-            id: true,
-          },
-        },
+        segments: {},
       },
       columns: {
         id: true,
@@ -140,8 +144,47 @@ export class StoryService implements IStoryService {
 
     await Promise.all([
       story.segments.map(async (segment) => {
-        console.log(`Generating video for segment ${segment.id}`);
+        console.log(`Downloading asset for segment ${segment.id}`);
+        const jobData: DownloadSegmentAssetJobData = {
+          segment,
+        };
+        await this.imageQueue.add(
+          ImageJobNames.DOWNLOAD_AND_GENERATE_SEGMENT_FRAME,
+          jobData,
+        );
       }),
     ]);
+  }
+
+  async generateSegmentVideoFrame(
+    segment: ISegment,
+    imagePath: string,
+    voicePath: string,
+  ): Promise<void> {
+    const frameRate = 24;
+    const outputDir = `./tmp/frames/segment_${segment.id}`;
+
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const wordTiming = await this.storyAgent.getWordTimestamps(voicePath);
+    let frameIndex = 0;
+
+    for (const { word, end, start } of wordTiming) {
+      const frameDuration = Math.max(end - start, 0.5);
+      const frameCount = Math.max(1, Math.ceil(frameDuration * frameRate));
+
+      for (let i = 0; i < frameCount; i++) {
+        const jobData: GenerateImageFrameJobData = {
+          text: word,
+          frameIndex: frameIndex,
+          imagePath,
+          voicePath,
+          outputDir,
+        };
+        await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE_FRAME, jobData);
+
+        frameIndex++;
+      }
+    }
   }
 }

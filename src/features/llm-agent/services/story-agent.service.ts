@@ -8,6 +8,8 @@ import {
   GenerateSegmentImagePromptSchema,
 } from "../dtos";
 import { zodResponseFormat } from "openai/helpers/zod";
+import * as fs from "fs";
+import { TranscriptionWord } from "openai/resources/audio/transcriptions";
 
 @Injectable()
 export class StoryAgentService implements IStoryAgentService {
@@ -119,6 +121,8 @@ export class StoryAgentService implements IStoryAgentService {
         ),
       });
 
+      console.log("generate segment image prompt token usage:", response.usage);
+
       const promptString = response.choices[0].message.content;
       if (!promptString) {
         throw new StoryError(StoryErrorType.FailedToGenerateStory);
@@ -131,6 +135,7 @@ export class StoryAgentService implements IStoryAgentService {
     }
   }
 
+  // NOTE: currently my openai plan dose not support voice generation so we use pre-recorded audio
   async generateSegmentVoice(segment: string): Promise<Buffer> {
     try {
       const response = await this.openai.audio.speech.create({
@@ -140,6 +145,31 @@ export class StoryAgentService implements IStoryAgentService {
       });
 
       return Buffer.from(await response.arrayBuffer());
+
+      // const voiceUrl =
+      //   "http://localhost:9000/scary-story-generator/2a103384-be10-4ee7-99d5-63105897fe4c";
+      // const response = await fetch(voiceUrl);
+      // return Buffer.from(await response.arrayBuffer());
+    } catch (error: unknown) {
+      throw new StoryError(StoryErrorType.LlmAgentFailed, error);
+    }
+  }
+
+  async getWordTimestamps(audioPath: string): Promise<TranscriptionWord[]> {
+    try {
+      const response = await this.openai.audio.transcriptions.create({
+        model: "whisper-1",
+        file: fs.createReadStream(audioPath),
+        response_format: "verbose_json",
+        timestamp_granularities: ["word"],
+        temperature: 0,
+      });
+
+      if (!response || !response.words) {
+        throw new StoryError(StoryErrorType.LlmAgentFailed);
+      }
+
+      return response.words;
     } catch (error: unknown) {
       throw new StoryError(StoryErrorType.LlmAgentFailed, error);
     }

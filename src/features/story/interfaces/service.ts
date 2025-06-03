@@ -1,3 +1,4 @@
+import { ISegment } from "src/drizzle/schema";
 import { CreateSegmentDto, CreateStoryDto } from "../dtos";
 
 export interface IStoryService {
@@ -18,8 +19,14 @@ export interface IStoryService {
 
   generateSegmentImage(segmentId: string, prompt: string): Promise<void>;
   generateVideo(userId: string, storyId: string): Promise<void>;
+  generateSegmentVideoFrame(
+    segment: ISegment,
+    imagePath: string,
+    voicePath: string,
+  ): Promise<void>;
 }
 
 export interface IS3Service {
   putObject(id: string, mimetype: string, buffer: Buffer): Promise<string>;
+  getObject(id: string): Promise<Buffer>;
 }
