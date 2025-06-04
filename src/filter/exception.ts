@@ -11,6 +11,7 @@ export enum StoryErrorType {
   HasNoPermission = "HAS_NO_PERMISSION",
   FailedToGenerateImage = "FAILED_TO_GENERATE_IMAGE",
   S3ReqFailed = "S3_REQUEST_FAILED",
+  Timeout = "TIMEOUT",
 }
 
 export class StoryError extends HttpException {

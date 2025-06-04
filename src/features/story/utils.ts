@@ -1,0 +1,67 @@
+import { TranscriptionWord } from "openai/resources/audio/transcriptions";
+import SrtParser, { Line } from "srt-parser-2";
+import * as fs from "fs/promises";
+
+export async function generateSRTFile(
+  wordTiming: TranscriptionWord[],
+  outputPath: string,
+) {
+  const maxWords = 5;
+  const pauseThreshold = 0.3;
+
+  const parser = new SrtParser();
+  const subtitles: Line[] = [];
+  let currentWords: string[] = [];
+  let segmentStartTime = 0;
+  let lastWordEndTime = 0;
+  let subtitleIndex = 1;
+
+  for (let i = 0; i < wordTiming.length; i++) {
+    const { word, start, end } = wordTiming[i];
+    const pauseDuration = start - lastWordEndTime;
+    const hasPause = pauseDuration > pauseThreshold;
+
+    if (currentWords.length === 0) {
+      segmentStartTime = start;
+    } else if (hasPause || currentWords.length >= maxWords) {
+      if (currentWords.length > 0) {
+        subtitles.push({
+          id: String(subtitleIndex),
+          startTime: formatSRTTime(segmentStartTime),
+          endTime: formatSRTTime(lastWordEndTime),
+          text: currentWords.join(" "),
+          startSeconds: segmentStartTime,
+          endSeconds: lastWordEndTime,
+        });
+        subtitleIndex++;
+      }
+      currentWords = [];
+      segmentStartTime = start;
+    }
+
+    currentWords.push(word);
+    lastWordEndTime = end;
+
+    if (i === wordTiming.length - 1) {
+      subtitles.push({
+        id: String(subtitleIndex),
+        startTime: formatSRTTime(segmentStartTime),
+        endTime: formatSRTTime(end),
+        text: currentWords.join(" "),
+        startSeconds: segmentStartTime,
+        endSeconds: lastWordEndTime,
+      });
+    }
+  }
+
+  const srtContent = parser.toSrt(subtitles);
+  await fs.writeFile(outputPath, srtContent);
+}
+
+function formatSRTTime(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  const millis = Math.floor((seconds % 1) * 1000);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")},${String(millis).padStart(3, "0")}`;
+}

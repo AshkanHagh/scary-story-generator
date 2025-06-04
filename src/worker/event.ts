@@ -1,6 +1,7 @@
 export enum WorkerEvents {
   Story = "story",
   Image = "image",
+  Video = "video",
 }
 
 export enum StoryJobNames {
@@ -14,4 +15,8 @@ export enum ImageJobNames {
   GENERATE_IMAGE = "generate.image",
   DOWNLOAD_AND_GENERATE_SEGMENT_FRAME = "download.segment.image.audio.frame.audio",
   GENERATE_IMAGE_FRAME = "generate.image.frame",
+}
+
+export enum VideoJobNames {
+  GENERATE_SEGMENT_VIDEO = "generate.segment.video",
 }

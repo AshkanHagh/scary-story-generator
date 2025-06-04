@@ -37,7 +37,17 @@ export type DownloadSegmentAssetJobData = {
 export type GenerateImageFrameJobData = {
   frameIndex: number;
   imagePath: string;
-  text: string;
-  voicePath: string;
   outputDir: string;
+};
+
+export type GenerateSegmentVideoJobData = {
+  segmentId: string;
+  segmentOrder: number;
+  frameRate: number;
+  framePath: string;
+  audioPath: string;
+  outputDir: string;
+  frameIndex: number;
+  srtPath: string;
+  imagePath: string;
 };

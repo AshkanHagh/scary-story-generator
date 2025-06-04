@@ -19,6 +19,9 @@ import { LlmAgentModule } from "../llm-agent/llm-agent.module";
     BullModule.registerQueue({
       name: WorkerEvents.Image,
     }),
+    BullModule.registerQueue({
+      name: WorkerEvents.Video,
+    }),
   ],
   providers: [StoryService, S3Service],
   controllers: [StoryController],

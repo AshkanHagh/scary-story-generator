@@ -3,7 +3,12 @@ import { IStoryService } from "./interfaces/service";
 import { CreateSegmentDto, CreateStoryDto } from "./dtos";
 import { RepositoryService } from "src/repository/repository.service";
 import { InjectQueue } from "@nestjs/bullmq";
-import { ImageJobNames, StoryJobNames, WorkerEvents } from "src/worker/event";
+import {
+  ImageJobNames,
+  StoryJobNames,
+  VideoJobNames,
+  WorkerEvents,
+} from "src/worker/event";
 import { Queue } from "bullmq";
 import {
   DownloadSegmentAssetJobData,
@@ -11,21 +16,23 @@ import {
   GenerateImageContextJobData,
   GenerateImageFrameJobData,
   GenerateSegmentImageJobData,
+  GenerateSegmentVideoJobData,
   RegenrateSegmentImageJobData,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
-import { S3Service } from "./services/s3.service";
 import { ISegment } from "src/drizzle/schema";
 import { StoryAgentService } from "../llm-agent/services/story-agent.service";
 import * as fs from "fs/promises";
+import * as path from "path";
+import { generateSRTFile } from "./utils";
 
 @Injectable()
 export class StoryService implements IStoryService {
   constructor(
     @InjectQueue(WorkerEvents.Story) private storyQueue: Queue,
     @InjectQueue(WorkerEvents.Image) private imageQueue: Queue,
+    @InjectQueue(WorkerEvents.Video) private videoQueue: Queue,
     private repo: RepositoryService,
-    private s3: S3Service,
     private storyAgent: StoryAgentService,
   ) {}
 
@@ -144,7 +151,6 @@ export class StoryService implements IStoryService {
 
     await Promise.all([
       story.segments.map(async (segment) => {
-        console.log(`Downloading asset for segment ${segment.id}`);
         const jobData: DownloadSegmentAssetJobData = {
           segment,
         };
@@ -163,28 +169,46 @@ export class StoryService implements IStoryService {
   ): Promise<void> {
     const frameRate = 24;
     const outputDir = `./tmp/frames/segment_${segment.id}`;
+    const videoOutputDir = "./tmp/videos";
+    const srtOutputDir = "./tmp/srt";
+    const srtPath = path.join(srtOutputDir, `segment_${segment.id}.srt`);
 
-    await fs.mkdir(outputDir, { recursive: true });
+    await Promise.all([
+      fs.mkdir(outputDir, { recursive: true }),
+      fs.mkdir(videoOutputDir, { recursive: true }),
+      fs.mkdir(srtOutputDir, { recursive: true }),
+    ]);
 
     const wordTiming = await this.storyAgent.getWordTimestamps(voicePath);
+    await generateSRTFile(wordTiming, srtPath);
+
     let frameIndex = 0;
+    const audioDuration =
+      wordTiming.length > 0 ? wordTiming[wordTiming.length - 1].end : 0;
+    const frameCount = Math.ceil(audioDuration * frameRate);
 
-    for (const { word, end, start } of wordTiming) {
-      const frameDuration = Math.max(end - start, 0.5);
-      const frameCount = Math.max(1, Math.ceil(frameDuration * frameRate));
+    for (let i = 0; i < frameCount; i++) {
+      const jobData: GenerateImageFrameJobData = {
+        frameIndex,
+        imagePath,
+        outputDir,
+      };
 
-      for (let i = 0; i < frameCount; i++) {
-        const jobData: GenerateImageFrameJobData = {
-          text: word,
-          frameIndex: frameIndex,
-          imagePath,
-          voicePath,
-          outputDir,
-        };
-        await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE_FRAME, jobData);
-
-        frameIndex++;
-      }
+      await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE_FRAME, jobData);
+      frameIndex++;
     }
+
+    const payload: GenerateSegmentVideoJobData = {
+      audioPath: voicePath,
+      framePath: outputDir,
+      frameRate,
+      outputDir: videoOutputDir,
+      segmentId: segment.id,
+      segmentOrder: segment.order,
+      frameIndex,
+      srtPath: srtPath,
+      imagePath,
+    };
+    await this.videoQueue.add(VideoJobNames.GENERATE_SEGMENT_VIDEO, payload);
   }
 }

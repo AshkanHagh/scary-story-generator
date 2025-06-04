@@ -18,7 +18,7 @@ import * as path from "path";
 import { StoryService } from "src/features/story/story.service";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 
-@Processor(WorkerEvents.Image, { concurrency: 6 })
+@Processor(WorkerEvents.Image, { concurrency: 4 })
 export class ImageWorker extends WorkerHost {
   constructor(
     @AiConfig() private config: IAiConfig,
@@ -188,32 +188,20 @@ export class ImageWorker extends WorkerHost {
       drawWidth = drawHeight * imgAspect;
     }
 
-    const offsetX = Math.round((canvasWidth - drawWidth) / 2);
-    const offsetY = Math.round((canvasHeight - drawHeight) / 2);
-    drawWidth = Math.round(drawWidth);
-    drawHeight = Math.round(drawHeight);
+    const offsetX = (canvasWidth - drawWidth) / 2;
+    const offsetY = (canvasHeight - drawHeight) / 2;
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
 
     ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
 
-    ctx.font = "60px Arial";
-    ctx.fillStyle = "white";
-    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "bottom";
-    ctx.fillText(payload.text, canvasWidth / 2, canvasHeight - 40);
-
     const framePath = path.join(
       payload.outputDir,
-      `frame_${String(payload.frameIndex).padStart(4, "0")}.png`,
+      `frame_${String(payload.frameIndex).padStart(4, "0")}.jpeg`,
     );
 
-    const buffer = await canvas.encode("png");
+    const buffer = await canvas.encode("jpeg", 80);
     await fs.writeFile(framePath, buffer);
   }
 }
