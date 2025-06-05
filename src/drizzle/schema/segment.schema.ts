@@ -17,6 +17,7 @@ export const SegmentTable = pgTable("segments", (table) => {
     voiceId: table.uuid(),
     videoId: table.uuid(),
     isGenerating: table.boolean().notNull().default(false),
+    error: table.text(),
     createdAt: table.timestamp().notNull().defaultNow(),
     updatedAt: table
       .timestamp()

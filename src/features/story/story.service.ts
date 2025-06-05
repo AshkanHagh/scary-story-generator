@@ -9,8 +9,9 @@ import {
   VideoJobNames,
   WorkerEvents,
 } from "src/worker/event";
-import { Queue } from "bullmq";
+import { FlowJob, FlowProducer, Queue } from "bullmq";
 import {
+  CombineSegmentVideosJobData,
   DownloadSegmentAssetJobData,
   GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
@@ -28,13 +29,19 @@ import { generateSRTFile } from "./utils";
 
 @Injectable()
 export class StoryService implements IStoryService {
+  private flowProducer: FlowProducer;
+
   constructor(
     @InjectQueue(WorkerEvents.Story) private storyQueue: Queue,
     @InjectQueue(WorkerEvents.Image) private imageQueue: Queue,
     @InjectQueue(WorkerEvents.Video) private videoQueue: Queue,
     private repo: RepositoryService,
     private storyAgent: StoryAgentService,
-  ) {}
+  ) {
+    this.flowProducer = new FlowProducer({
+      connection: this.imageQueue.opts.connection,
+    });
+  }
 
   async createStory(userId: string, payload: CreateStoryDto): Promise<string> {
     const story = await this.repo.story().insert({
@@ -149,6 +156,12 @@ export class StoryService implements IStoryService {
       throw new StoryError(StoryErrorType.HasNoPermission);
     }
 
+    await this.repo.videoProcessingStatus().insert({
+      storyId: story.id,
+      totalSegments: story.segments.length,
+      completedSegments: 0,
+    });
+
     await Promise.all([
       story.segments.map(async (segment) => {
         const jobData: DownloadSegmentAssetJobData = {
@@ -185,8 +198,12 @@ export class StoryService implements IStoryService {
     let frameIndex = 0;
     const audioDuration =
       wordTiming.length > 0 ? wordTiming[wordTiming.length - 1].end : 0;
-    const frameCount = Math.ceil(audioDuration * frameRate);
+    const extraPaddingSeconds = 2;
+    const frameCount = Math.ceil(
+      (audioDuration + extraPaddingSeconds) * frameRate,
+    );
 
+    const frameJobs: FlowJob[] = [];
     for (let i = 0; i < frameCount; i++) {
       const jobData: GenerateImageFrameJobData = {
         frameIndex,
@@ -194,11 +211,16 @@ export class StoryService implements IStoryService {
         outputDir,
       };
 
-      await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE_FRAME, jobData);
+      frameJobs.push({
+        name: ImageJobNames.GENERATE_IMAGE_FRAME,
+        data: jobData,
+        queueName: WorkerEvents.Image,
+      });
+
       frameIndex++;
     }
 
-    const payload: GenerateSegmentVideoJobData = {
+    const jobData: GenerateSegmentVideoJobData = {
       audioPath: voicePath,
       framePath: outputDir,
       frameRate,
@@ -208,7 +230,36 @@ export class StoryService implements IStoryService {
       frameIndex,
       srtPath: srtPath,
       imagePath,
+      storyId: segment.storyId,
     };
-    await this.videoQueue.add(VideoJobNames.GENERATE_SEGMENT_VIDEO, payload);
+    const segmentVideoJob: FlowJob = {
+      name: VideoJobNames.GENERATE_SEGMENT_VIDEO,
+      data: jobData,
+      queueName: WorkerEvents.Video,
+      children: frameJobs,
+    };
+
+    await this.flowProducer.add({
+      name: VideoJobNames.START_WORKFLOW,
+      queueName: WorkerEvents.Video,
+      children: [segmentVideoJob],
+    });
+  }
+
+  async combineSegmentVideo(
+    storyId: string,
+    videosPath: string,
+  ): Promise<void> {
+    const outputDir = "./tmp/completed_videos";
+    const outputPath = path.join(outputDir, `finished_${storyId}.mp4`);
+
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const jobData: CombineSegmentVideosJobData = {
+      outputPath,
+      videosPath,
+    };
+
+    await this.videoQueue.add(VideoJobNames.COMBINE_SEGMENT_VIDEOS, jobData);
   }
 }

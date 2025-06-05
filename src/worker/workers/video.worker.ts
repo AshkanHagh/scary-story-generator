@@ -1,15 +1,22 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { VideoJobNames, WorkerEvents } from "../event";
 import { Job } from "bullmq";
-import { GenerateSegmentVideoJobData } from "../types";
+import {
+  CombineSegmentVideosJobData,
+  GenerateSegmentVideoJobData,
+} from "../types";
 import * as ffmpeg from "fluent-ffmpeg";
 import * as path from "path";
 import * as fs from "fs/promises";
-import { StoryError, StoryErrorType } from "src/filter/exception";
+import { RepositoryService } from "src/repository/repository.service";
+import { StoryService } from "src/features/story/story.service";
 
 @Processor(WorkerEvents.Video, { concurrency: 4 })
 export class VideoWorker extends WorkerHost {
-  constructor() {
+  constructor(
+    private repo: RepositoryService,
+    private storyService: StoryService,
+  ) {
     super();
   }
 
@@ -22,8 +29,19 @@ export class VideoWorker extends WorkerHost {
           const payload = job.data as GenerateSegmentVideoJobData;
 
           try {
-            await this.waitForFrames(payload.framePath, payload.frameIndex);
+            console.log("Generating segment video...");
             await this.createSegmentVideo(payload);
+
+            const videoStatus = await this.repo
+              .videoProcessingStatus()
+              .updateCompletedSegment(payload.storyId);
+
+            if (videoStatus.completedSegments === videoStatus.totalSegments) {
+              await this.storyService.combineSegmentVideo(
+                payload.storyId,
+                payload.outputDir,
+              );
+            }
           } finally {
             await fs.rm(payload.framePath, { recursive: true, force: true });
             await fs.rm(payload.audioPath, { recursive: true, force: true });
@@ -33,30 +51,18 @@ export class VideoWorker extends WorkerHost {
 
           break;
         }
+        case VideoJobNames.COMBINE_SEGMENT_VIDEOS as string: {
+          const payload = job.data as CombineSegmentVideosJobData;
+          await this.combineSegmentVideos(payload);
+
+          break;
+        }
       }
 
       console.log("Job processed successfully:", job.name);
     } catch (error: unknown) {
       console.log("Error processing job:", job.name);
       console.log(error);
-    }
-  }
-
-  private async waitForFrames(frameDir: string, frameIndex: number) {
-    const startTime = Date.now();
-    const timeout = 5 * 60 * 1000;
-
-    while (true) {
-      const files = await fs.readdir(frameDir);
-      if (files.length === frameIndex) {
-        break;
-      }
-      if (Date.now() - startTime > timeout) {
-        throw new StoryError(StoryErrorType.Timeout);
-      }
-
-      console.log(`Waiting for frames: ${files.length}/${frameIndex}`);
-      await new Promise((resolve) => setTimeout(resolve, 200));
     }
   }
 
@@ -87,7 +93,34 @@ export class VideoWorker extends WorkerHost {
     });
   }
 
-  // NOTE: Currently, in this articheter we dont need to upload the video to S3 and update the database.
+  private async combineSegmentVideos(payload: CombineSegmentVideosJobData) {
+    const files = await fs.readdir(payload.videosPath);
+    const videoFiles = files.sort((a, b) => {
+      const orderA = parseInt(a.match(/(\d{2})\.mp4$/)?.[1] || "0", 10);
+      const orderB = parseInt(b.match(/(\d{2})\.mp4$/)?.[1] || "0", 10);
+
+      return orderA - orderB;
+    });
+
+    const fileListPath = path.resolve(payload.videosPath, "file_list.txt");
+    const fileListContent = videoFiles
+      .map((file) => `file '${path.resolve(payload.videosPath, file)}'`)
+      .join("\n");
+    await fs.writeFile(fileListPath, fileListContent);
+
+    return new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(fileListPath)
+        .inputOptions(["-f concat", "-safe 0"])
+        .outputOptions(["-c copy", "-y"])
+        .output(payload.outputPath)
+        .on("end", resolve)
+        .on("error", reject)
+        .run();
+    });
+  }
+
+  // NOTE: Currently, in this architecture we don't need to upload the video to S3 and update the database.
   // Uncomment the following lines to upload the video to S3 and update the database
 
   // private async createSegmentVideo(payload: GenerateSegmentVideoJobData) {

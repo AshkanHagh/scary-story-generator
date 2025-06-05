@@ -24,6 +24,7 @@ export interface IStoryService {
     imagePath: string,
     voicePath: string,
   ): Promise<void>;
+  combineSegmentVideo(storyId: string, videosPath: string): Promise<void>;
 }
 
 export interface IS3Service {

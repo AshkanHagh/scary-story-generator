@@ -42,6 +42,7 @@ export type GenerateImageFrameJobData = {
 
 export type GenerateSegmentVideoJobData = {
   segmentId: string;
+  storyId: string;
   segmentOrder: number;
   frameRate: number;
   framePath: string;
@@ -50,4 +51,9 @@ export type GenerateSegmentVideoJobData = {
   frameIndex: number;
   srtPath: string;
   imagePath: string;
+};
+
+export type CombineSegmentVideosJobData = {
+  videosPath: string;
+  outputPath: string;
 };

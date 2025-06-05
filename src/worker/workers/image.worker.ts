@@ -166,7 +166,7 @@ export class ImageWorker extends WorkerHost {
   async generateImageFrame(payload: GenerateImageFrameJobData) {
     const canvasWidth = 1920;
     const canvasHeight = 1080;
-    const zoomStep = 0.001;
+    const zoomStep = 0.0003;
 
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext("2d");

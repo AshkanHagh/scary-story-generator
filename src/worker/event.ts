@@ -18,5 +18,7 @@ export enum ImageJobNames {
 }
 
 export enum VideoJobNames {
+  START_WORKFLOW = "start.workflow",
   GENERATE_SEGMENT_VIDEO = "generate.segment.video",
+  COMBINE_SEGMENT_VIDEOS = "combine.segment.videos",
 }
