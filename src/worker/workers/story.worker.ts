@@ -12,6 +12,7 @@ import {
 import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
 import { StoryProcessingService } from "src/features/story/services/story-processing.service";
+import { StoryError, StoryErrorType } from "src/filter/exception";
 
 @Processor(WorkerEvents.Story, { concurrency: 4 })
 export class StoryWorker extends WorkerHost {
@@ -63,12 +64,20 @@ export class StoryWorker extends WorkerHost {
   private async generateGuidedStory(
     payload: GenerateGuidedStoryJobData,
   ): Promise<void> {
-    const script = await this.storyAgent.generateGuidedStory(payload.script);
+    try {
+      const script = await this.storyAgent.generateGuidedStory(payload.script);
 
-    await this.repo.story().update(payload.storyId, {
-      script,
-      userId: payload.userId,
-    });
+      await this.repo.story().update(payload.storyId, {
+        script,
+        userId: payload.userId,
+        status: "completed",
+      });
+    } catch (error: unknown) {
+      await this.repo.story().update(payload.storyId, {
+        status: "failed",
+      });
+      throw new StoryError(StoryErrorType.FailedToGenerateStory, error);
+    }
   }
 
   private async generateImageContext(
@@ -98,16 +107,31 @@ export class StoryWorker extends WorkerHost {
       payload.segment,
     );
 
-    await this.service.generateSegmentImage(payload.segmentId, prompt);
+    await this.service.generateSegmentImage(
+      payload.storyId,
+      payload.segmentId,
+      prompt,
+    );
   }
 
   private async generateSegmentVoice(
     payload: GenerateSegmentVoiceJobData,
   ): Promise<void> {
-    const buffer = await this.storyAgent.generateSegmentVoice(payload.segment);
+    try {
+      const buffer = await this.storyAgent.generateSegmentVoice(
+        payload.segment,
+      );
 
-    const voiceId = uuid();
-    await this.s3.putObject(voiceId, "audio/mpeg", buffer);
-    await this.repo.segment().update(payload.segmentId, { voiceId });
+      const voiceId = uuid();
+      await this.s3.putObject(voiceId, "audio/mpeg", buffer);
+      await this.repo.segment().update(payload.segmentId, { voiceId });
+    } catch (error: unknown) {
+      await this.repo.segment().update(payload.segmentId, {
+        isGenerating: false,
+        // TODO: use error message
+        error: error as string,
+      });
+      throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
+    }
   }
 }

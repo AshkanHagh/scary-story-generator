@@ -8,8 +8,7 @@ import {
 } from "../types";
 import { RepositoryService } from "src/repository/repository.service";
 import { ImageAgentService } from "src/features/llm-agent/services/image-agent.service";
-import { AiConfig, IAiConfig } from "src/configs/ai.config";
-import * as sharp from "sharp";
+import sharp from "sharp";
 import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
 import { StoryError, StoryErrorType } from "src/filter/exception";
@@ -21,7 +20,6 @@ import { StoryProcessingService } from "src/features/story/services/story-proces
 @Processor(WorkerEvents.Image, { concurrency: 4 })
 export class ImageWorker extends WorkerHost {
   constructor(
-    @AiConfig() private config: IAiConfig,
     private repo: RepositoryService,
     private imageAgent: ImageAgentService,
     private s3: S3Service,
@@ -73,26 +71,19 @@ export class ImageWorker extends WorkerHost {
   }
 
   private async generateSegmentImage(payload: RegenrateSegmentImageJobData) {
-    const isVertical = payload.isVertical;
-    // const width = isVertical ? 1080 : 1920;
-    // const height = isVertical ? 1920 : 1080;
-    const SCALE_WIDTH = 540;
-    const SCALE_HEIGHT = 960;
-
     try {
       let output: string;
 
-      if (this.config.replicate.model === "flux") {
+      if (process.env.NODE_ENV === "production") {
         output = await this.imageAgent.generateImageUsingFlux({
           prompt: payload.prompt,
           num_outputs: 1,
           disable_safety_checker: false,
-          aspect_ratio: isVertical ? "9:16" : "16:9",
+          aspect_ratio: "16:9",
           output_format: "jpg",
           output_quality: 90,
         });
       } else {
-        // TODO: use another replicate model
         output =
           "http://localhost:9000/scary-story-generator/thumb-1920-1337024.png";
       }
@@ -104,35 +95,24 @@ export class ImageWorker extends WorkerHost {
         .webp({ quality: 90 })
         .toBuffer();
 
-      const previewImage = await sharp(imageBuffer)
-        .resize({
-          width: isVertical ? SCALE_WIDTH : SCALE_HEIGHT,
-          height: isVertical ? SCALE_HEIGHT : SCALE_WIDTH,
-          fit: "inside",
-        })
-        .jpeg({ quality: 90 })
-        .toBuffer();
-
       const imageId = uuid();
-      const previewId = uuid();
       await Promise.all([
         this.s3.putObject(imageId, "image/webp", originalImage),
-        this.s3.putObject(previewId, "image/webp", previewImage),
       ]);
 
       await this.repo.segment().update(payload.segmentId, {
         isGenerating: false,
         prompt: payload.prompt,
         imageId,
-        previewImageId: previewId,
       });
     } catch (error: unknown) {
       await this.repo.segment().update(payload.segmentId, {
         isGenerating: false,
+        // TODO: use error message
+        error: error as string,
       });
 
-      console.log(error);
-      throw new StoryError(StoryErrorType.FailedToGenerateImage, error);
+      throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
     }
   }
 

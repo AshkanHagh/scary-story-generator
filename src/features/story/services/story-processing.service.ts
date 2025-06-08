@@ -13,6 +13,7 @@ import {
   GenerateImageFrameJobData,
   GenerateSegmentImageJobData,
   GenerateSegmentVideoJobData,
+  GenerateSegmentVoiceJobData,
   RegenrateSegmentImageJobData,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
@@ -40,6 +41,7 @@ export class StoryProcessingService implements IStoryProcessingService {
   }
 
   async createSegmentWithImage(
+    // Userid for consuming token from user tokens
     userId: string,
     storyId: string,
     text: string,
@@ -53,40 +55,36 @@ export class StoryProcessingService implements IStoryProcessingService {
       isGenerating: true,
     });
 
-    const jobData: GenerateSegmentImageJobData = {
-      segmentId: segment.id,
-      context,
-      segment: text,
-    };
-
     await Promise.all([
-      this.storyQueue.add(
-        StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE,
-        jobData,
-      ),
-      this.storyQueue.add(StoryJobNames.GENERATE_SEGMENT_VOICE, jobData),
+      this.storyQueue.add(StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE, {
+        storyId,
+        segmentId: segment.id,
+        context,
+        segment: text,
+      } as GenerateSegmentImageJobData),
+
+      this.storyQueue.add(StoryJobNames.GENERATE_SEGMENT_VOICE, {
+        segment: text,
+        segmentId: segment.id,
+      } as GenerateSegmentVoiceJobData),
     ]);
   }
 
-  async generateSegmentImage(segmentId: string, prompt: string): Promise<void> {
-    const segment = await this.repo.segment().find(segmentId);
-    if (!segment) {
-      throw new StoryError(StoryErrorType.FailedToGenerateStory);
-    }
-
-    const story = await this.repo.story().find(segment.storyId);
+  async generateSegmentImage(
+    storyId: string,
+    segmentId: string,
+    segment: string,
+  ): Promise<void> {
+    const story = await this.repo.story().find(storyId);
+    // NOTE: always exists
     if (!story) {
       throw new StoryError(StoryErrorType.FailedToGenerateStory);
     }
 
-    await this.repo.segment().update(segment.id, { isGenerating: true });
-
-    const isVertical = story.isVertical ?? false;
-
     const jobData: RegenrateSegmentImageJobData = {
-      prompt: prompt,
-      segmentId: segment.id,
-      isVertical,
+      prompt: segment,
+      segmentId: segmentId,
+      isVertical: story.isVertical,
     };
     await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE, jobData);
   }

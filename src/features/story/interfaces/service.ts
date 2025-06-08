@@ -25,7 +25,12 @@ export interface IStoryProcessingService {
     context: string,
   ): Promise<void>;
 
-  generateSegmentImage(segmentId: string, prompt: string): Promise<void>;
+  generateSegmentImage(
+    storyId: string,
+    segmentId: string,
+    segment: string,
+  ): Promise<void>;
+
   generateSegmentVideoFrame(
     segment: ISegment,
     imagePath: string,

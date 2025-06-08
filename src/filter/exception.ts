@@ -5,13 +5,14 @@ export enum StoryErrorType {
   InvalidToken = "INVALID_TOKEN",
   Unauthorized = "UNAUTHORIZED",
   FailedToGenerateStory = "FAILED_TO_GENERATE_STORY",
+  FailedToGenerateSegment = "FAILED_TO_GENERATE_SEGMENT",
   InvalidBodyField = "INVALID_BODY_FIELD",
   LlmAgentFailed = "LLM_AGENT_FAILED",
   NotFound = "NOT_FOUND",
   HasNoPermission = "HAS_NO_PERMISSION",
-  FailedToGenerateImage = "FAILED_TO_GENERATE_IMAGE",
   S3ReqFailed = "S3_REQUEST_FAILED",
   Timeout = "TIMEOUT",
+  NotCompleted = "NOT_COMPLETED",
 }
 
 export class StoryError extends HttpException {

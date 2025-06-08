@@ -13,6 +13,7 @@ export type GenerateImageContextJobData = {
 };
 
 export type GenerateSegmentImageJobData = {
+  storyId: string;
   segmentId: string;
   segment: string;
   context: string;
@@ -27,7 +28,6 @@ export type RegenrateSegmentImageJobData = {
 export type GenerateSegmentVoiceJobData = {
   segmentId: string;
   segment: string;
-  context: string;
 };
 
 export type DownloadSegmentAssetJobData = {

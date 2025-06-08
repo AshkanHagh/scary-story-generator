@@ -51,7 +51,12 @@ export class StoryService implements IStoryService {
     storyId: string,
     payload: CreateSegmentDto,
   ): Promise<void> {
+    // Throws error if story does not exist
     const story = await this.repo.story().userHasAccess(storyId, userId);
+    if (story.status !== "completed") {
+      throw new StoryError(StoryErrorType.NotCompleted);
+    }
+
     await this.repo.story().update(storyId, { isVertical: payload.isVertical });
 
     const jobData: GenerateImageContextJobData = {

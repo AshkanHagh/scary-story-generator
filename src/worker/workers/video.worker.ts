@@ -5,7 +5,7 @@ import {
   CombineSegmentVideosJobData,
   GenerateSegmentVideoJobData,
 } from "../types";
-import * as ffmpeg from "fluent-ffmpeg";
+import ffmpeg from "fluent-ffmpeg";
 import * as path from "path";
 import * as fs from "fs/promises";
 import { RepositoryService } from "src/repository/repository.service";
