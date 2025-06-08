@@ -7,6 +7,7 @@ import { WorkerEvents } from "src/worker/event";
 import { AuthModule } from "../auth/auth.module";
 import { S3Service } from "./services/s3.service";
 import { LlmAgentModule } from "../llm-agent/llm-agent.module";
+import { StoryProcessingService } from "./services/story-processing.service";
 
 @Module({
   imports: [
@@ -23,8 +24,8 @@ import { LlmAgentModule } from "../llm-agent/llm-agent.module";
       name: WorkerEvents.Video,
     }),
   ],
-  providers: [StoryService, S3Service],
+  providers: [StoryService, S3Service, StoryProcessingService],
   controllers: [StoryController],
-  exports: [StoryService, S3Service],
+  exports: [S3Service, StoryProcessingService],
 })
 export class StoryModule {}

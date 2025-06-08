@@ -9,7 +9,7 @@ export const VideoProcessingStatusTable = pgTable(
       storyId: table
         .uuid()
         .primaryKey()
-        .references(() => StoryTable.id),
+        .references(() => StoryTable.id, { onDelete: "cascade" }),
       totalSegments: table.smallint().notNull(),
       completedSegments: table.smallint().notNull().default(0),
       lastChecked: table

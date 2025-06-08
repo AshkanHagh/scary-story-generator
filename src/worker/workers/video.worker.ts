@@ -9,13 +9,13 @@ import * as ffmpeg from "fluent-ffmpeg";
 import * as path from "path";
 import * as fs from "fs/promises";
 import { RepositoryService } from "src/repository/repository.service";
-import { StoryService } from "src/features/story/story.service";
+import { StoryProcessingService } from "src/features/story/services/story-processing.service";
 
 @Processor(WorkerEvents.Video, { concurrency: 4 })
 export class VideoWorker extends WorkerHost {
   constructor(
     private repo: RepositoryService,
-    private storyService: StoryService,
+    private service: StoryProcessingService,
   ) {
     super();
   }
@@ -37,7 +37,7 @@ export class VideoWorker extends WorkerHost {
               .updateCompletedSegment(payload.storyId);
 
             if (videoStatus.completedSegments === videoStatus.totalSegments) {
-              await this.storyService.combineSegmentVideo(
+              await this.service.combineSegmentVideo(
                 payload.storyId,
                 payload.outputDir,
               );

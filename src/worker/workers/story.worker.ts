@@ -9,16 +9,16 @@ import {
   GenerateSegmentImageJobData,
   GenerateSegmentVoiceJobData,
 } from "../types";
-import { StoryService } from "src/features/story/story.service";
 import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
+import { StoryProcessingService } from "src/features/story/services/story-processing.service";
 
 @Processor(WorkerEvents.Story, { concurrency: 4 })
 export class StoryWorker extends WorkerHost {
   constructor(
     private storyAgent: StoryAgentService,
     private repo: RepositoryService,
-    private storyService: StoryService,
+    private service: StoryProcessingService,
     private s3: S3Service,
   ) {
     super();
@@ -80,7 +80,7 @@ export class StoryWorker extends WorkerHost {
 
     const segments = payload.script.split(/\n{2,}/);
     for (let i = 0; i < segments.length; i++) {
-      await this.storyService.createSegmentWithImage(
+      await this.service.createSegmentWithImage(
         payload.userId,
         payload.storyId,
         segments[i],
@@ -98,7 +98,7 @@ export class StoryWorker extends WorkerHost {
       payload.segment,
     );
 
-    await this.storyService.generateSegmentImage(payload.segmentId, prompt);
+    await this.service.generateSegmentImage(payload.segmentId, prompt);
   }
 
   private async generateSegmentVoice(

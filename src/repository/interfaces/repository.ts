@@ -6,7 +6,11 @@ import {
   IVideoProcessingStatus,
   IVideoProcessingStatusInsertForm,
 } from "src/drizzle/schema";
-import { IStory, IStoryInsertForm } from "src/drizzle/schema/story.schema";
+import {
+  IStory,
+  IStoryInsertForm,
+  IStoryView,
+} from "src/drizzle/schema/story.schema";
 
 export interface IUserRepository {
   insert(form: IUserInsertForm): Promise<IUser>;
@@ -19,6 +23,7 @@ export interface IStoryRepository {
   update(id: string, form: Partial<IStoryInsertForm>): Promise<void>;
   userHasAccess(storyId: string, userId: string): Promise<IStory>;
   find(id: string): Promise<IStory | undefined>;
+  findWithSegments(id: string): Promise<IStoryView | undefined>;
 }
 
 export interface ISegmentRepository {

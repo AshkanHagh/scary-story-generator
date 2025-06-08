@@ -6,6 +6,7 @@ import {
   IStoryInsertForm,
   IStory,
   StoryTable,
+  IStoryView,
 } from "src/drizzle/schema/story.schema";
 import { eq } from "drizzle-orm";
 import { StoryError, StoryErrorType } from "src/filter/exception";
@@ -43,6 +44,17 @@ export class StoryRepository implements IStoryRepository {
       .select()
       .from(StoryTable)
       .where(eq(StoryTable.id, id));
+
+    return story;
+  }
+
+  async findWithSegments(id: string): Promise<IStoryView | undefined> {
+    const story = await this.db.query.StoryTable.findFirst({
+      where: (table, funcs) => funcs.eq(table.id, id),
+      with: {
+        segments: true,
+      },
+    });
 
     return story;
   }

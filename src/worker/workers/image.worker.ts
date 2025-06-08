@@ -15,8 +15,8 @@ import { v4 as uuid } from "uuid";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { StoryService } from "src/features/story/story.service";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { StoryProcessingService } from "src/features/story/services/story-processing.service";
 
 @Processor(WorkerEvents.Image, { concurrency: 4 })
 export class ImageWorker extends WorkerHost {
@@ -25,7 +25,7 @@ export class ImageWorker extends WorkerHost {
     private repo: RepositoryService,
     private imageAgent: ImageAgentService,
     private s3: S3Service,
-    private storyService: StoryService,
+    private service: StoryProcessingService,
   ) {
     super();
   }
@@ -49,7 +49,7 @@ export class ImageWorker extends WorkerHost {
             payload.segment.voiceId!,
           );
 
-          await this.storyService.generateSegmentVideoFrame(
+          await this.service.generateSegmentVideoFrame(
             payload.segment,
             imagePath,
             voicePath,

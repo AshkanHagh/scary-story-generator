@@ -8,7 +8,7 @@ export const SegmentTable = pgTable("segments", (table) => {
     storyId: table
       .uuid()
       .notNull()
-      .references(() => StoryTable.id),
+      .references(() => StoryTable.id, { onDelete: "cascade" }),
     order: table.integer().notNull().default(0),
     text: table.text().notNull(),
     prompt: table.text(),
