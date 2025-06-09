@@ -46,7 +46,6 @@ export type GenerateSegmentVideoJobData = {
   storyId: string;
   segmentOrder: number;
   frameRate: number;
-  frameIndex: number;
   videoId: string;
   tempPaths: TempFilePaths;
 };
