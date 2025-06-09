@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { RepositoryService } from "src/repository/repository.service";
 import { InjectQueue } from "@nestjs/bullmq";
 import {
@@ -7,7 +7,7 @@ import {
   VideoJobNames,
   WorkerEvents,
 } from "src/worker/event";
-import { FlowJob, FlowProducer, Queue } from "bullmq";
+import { Queue } from "bullmq";
 import {
   CombineSegmentVideosJobData,
   GenerateImageFrameJobData,
@@ -25,10 +25,14 @@ import * as path from "path";
 import { generateSRTFile } from "../utils";
 import { IStoryProcessingService } from "../interfaces/service";
 import { S3Service } from "./s3.service";
+import Piscina from "piscina";
+import { cpus } from "os";
 
 @Injectable()
-export class StoryProcessingService implements IStoryProcessingService {
-  private flowProducer: FlowProducer;
+export class StoryProcessingService
+  implements IStoryProcessingService, OnModuleDestroy
+{
+  private piscina: Piscina;
 
   constructor(
     @InjectQueue(WorkerEvents.Story) private storyQueue: Queue,
@@ -38,9 +42,15 @@ export class StoryProcessingService implements IStoryProcessingService {
     private storyAgent: StoryAgentService,
     private s3: S3Service,
   ) {
-    this.flowProducer = new FlowProducer({
-      connection: this.imageQueue.opts.connection,
+    this.piscina = new Piscina({
+      filename: path.join(__dirname, "frame-worker.js"),
+      maxThreads: cpus().length,
+      minThreads: 1,
     });
+  }
+
+  async onModuleDestroy() {
+    await this.piscina.destroy();
   }
 
   async createSegmentWithImage(
@@ -111,28 +121,32 @@ export class StoryProcessingService implements IStoryProcessingService {
     const wordTiming = await this.storyAgent.getWordTimestamps(voicePath);
     await generateSRTFile(wordTiming, srtPath);
 
-    let frameIndex = 0;
     const audioDuration = wordTiming[wordTiming.length - 1].end;
     const extraPaddingSeconds = 2;
     const frameCount = Math.ceil(
       (audioDuration + extraPaddingSeconds) * frameRate,
     );
 
-    const frameJobs: FlowJob[] = [];
+    const framePromises = [];
     for (let i = 0; i < frameCount; i++) {
       const jobData: GenerateImageFrameJobData = {
-        frameIndex,
+        frameIndex: i,
         imagePath,
         outputDir,
       };
 
-      frameJobs.push({
-        name: ImageJobNames.GENERATE_IMAGE_FRAME,
-        data: jobData,
-        queueName: WorkerEvents.Image,
-      });
+      // @ts-expect-error any value
+      framePromises.push(this.piscina.run(jobData));
+    }
 
-      frameIndex++;
+    const results = await Promise.allSettled(framePromises);
+    const errors = results.filter((result) => result.status === "rejected");
+
+    if (errors.length > 0) {
+      const error = new Error(
+        `generate segment ${segment.id} failed: ${errors[0].reason}`,
+      );
+      throw new StoryError(StoryErrorType.FailedToGenerateVideo, error);
     }
 
     const jobData: GenerateSegmentVideoJobData = {
@@ -145,23 +159,10 @@ export class StoryProcessingService implements IStoryProcessingService {
       frameRate,
       segmentId: segment.id,
       segmentOrder: segment.order,
-      frameIndex,
       storyId: segment.storyId,
       videoId,
     };
-    const segmentVideoJob: FlowJob = {
-      name: VideoJobNames.GENERATE_SEGMENT_VIDEO,
-      data: jobData,
-      queueName: WorkerEvents.Video,
-      children: frameJobs,
-      opts: { failParentOnFailure: true },
-    };
-
-    await this.flowProducer.add({
-      name: VideoJobNames.START_WORKFLOW,
-      queueName: WorkerEvents.Video,
-      children: [segmentVideoJob],
-    });
+    await this.videoQueue.add(VideoJobNames.GENERATE_SEGMENT_VIDEO, jobData);
   }
 
   async combineSegmentVideo(

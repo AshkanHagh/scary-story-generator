@@ -39,6 +39,7 @@
     "jsonwebtoken": "^9.0.2",
     "openai": "^4.103.0",
     "pg": "^8.16.0",
+    "piscina": "^5.0.0",
     "reflect-metadata": "^0.2.2",
     "replicate": "^1.0.1",
     "rxjs": "^7.8.1",

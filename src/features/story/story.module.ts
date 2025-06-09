@@ -14,15 +14,17 @@ import { StoryProcessingService } from "./services/story-processing.service";
     RepositoryModule,
     AuthModule,
     LlmAgentModule,
-    BullModule.registerQueue({
-      name: WorkerEvents.Story,
-    }),
-    BullModule.registerQueue({
-      name: WorkerEvents.Image,
-    }),
-    BullModule.registerQueue({
-      name: WorkerEvents.Video,
-    }),
+    BullModule.registerQueue(
+      {
+        name: WorkerEvents.Story,
+      },
+      {
+        name: WorkerEvents.Image,
+      },
+      {
+        name: WorkerEvents.Video,
+      },
+    ),
   ],
   providers: [StoryService, S3Service, StoryProcessingService],
   controllers: [StoryController],

@@ -3,7 +3,6 @@ import { ImageJobNames, WorkerEvents } from "../event";
 import { Job } from "bullmq";
 import {
   DownloadSegmentAssetJobData,
-  GenerateImageFrameJobData,
   RegenrateSegmentImageJobData,
 } from "../types";
 import { RepositoryService } from "src/repository/repository.service";
@@ -13,8 +12,6 @@ import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import * as fs from "fs/promises";
-import * as path from "path";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { StoryProcessingService } from "src/features/story/services/story-processing.service";
 
 @Processor(WorkerEvents.Image, { concurrency: 4 })
@@ -62,12 +59,6 @@ export class ImageWorker extends WorkerHost {
 
             throw error;
           }
-
-          break;
-        }
-        case ImageJobNames.GENERATE_IMAGE_FRAME as string: {
-          const payload = job.data as GenerateImageFrameJobData;
-          await this.generateImageFrame(payload);
 
           break;
         }
@@ -152,47 +143,5 @@ export class ImageWorker extends WorkerHost {
       imagePath,
       voicePath,
     };
-  }
-
-  async generateImageFrame(payload: GenerateImageFrameJobData) {
-    const canvasWidth = 1920;
-    const canvasHeight = 1080;
-    const zoomStep = 0.0003;
-
-    const canvas = createCanvas(canvasWidth, canvasHeight);
-    const ctx = canvas.getContext("2d");
-
-    const image = await loadImage(payload.imagePath);
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    const zoom = 1 + zoomStep * payload.frameIndex;
-    const imgAspect = image.width / image.height;
-    const canvasAspect = canvasWidth / canvasHeight;
-    let drawWidth: number, drawHeight: number;
-
-    if (imgAspect > canvasAspect) {
-      drawWidth = canvasWidth * zoom;
-      drawHeight = drawWidth / imgAspect;
-    } else {
-      drawHeight = canvasHeight * zoom;
-      drawWidth = drawHeight * imgAspect;
-    }
-
-    const offsetX = (canvasWidth - drawWidth) / 2;
-    const offsetY = (canvasHeight - drawHeight) / 2;
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-
-    ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
-
-    const framePath = path.join(
-      payload.outputDir,
-      `frame_${String(payload.frameIndex).padStart(4, "0")}.jpeg`,
-    );
-
-    const buffer = await canvas.encode("jpeg", 80);
-    await fs.writeFile(framePath, buffer);
   }
 }
