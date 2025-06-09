@@ -6,6 +6,8 @@ export enum StoryErrorType {
   Unauthorized = "UNAUTHORIZED",
   FailedToGenerateStory = "FAILED_TO_GENERATE_STORY",
   FailedToGenerateSegment = "FAILED_TO_GENERATE_SEGMENT",
+  FailedToGenerateImage = "FAILED_TO_GENERATE_IMAGE",
+  FailedToGenerateVideo = "FAILED_TO_GENERATE_VIDEO",
   InvalidBodyField = "INVALID_BODY_FIELD",
   LlmAgentFailed = "LLM_AGENT_FAILED",
   NotFound = "NOT_FOUND",

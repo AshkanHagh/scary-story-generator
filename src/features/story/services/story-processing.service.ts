@@ -15,6 +15,7 @@ import {
   GenerateSegmentVideoJobData,
   GenerateSegmentVoiceJobData,
   RegenrateSegmentImageJobData,
+  TempFilePaths,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { ISegment } from "src/drizzle/schema";
@@ -111,8 +112,7 @@ export class StoryProcessingService implements IStoryProcessingService {
     await generateSRTFile(wordTiming, srtPath);
 
     let frameIndex = 0;
-    const audioDuration =
-      wordTiming.length > 0 ? wordTiming[wordTiming.length - 1].end : 0;
+    const audioDuration = wordTiming[wordTiming.length - 1].end;
     const extraPaddingSeconds = 2;
     const frameCount = Math.ceil(
       (audioDuration + extraPaddingSeconds) * frameRate,
@@ -136,14 +136,16 @@ export class StoryProcessingService implements IStoryProcessingService {
     }
 
     const jobData: GenerateSegmentVideoJobData = {
-      audioPath: voicePath,
-      framePath: outputDir,
+      tempPaths: {
+        srtPath: srtPath,
+        imagePath,
+        framePath: outputDir,
+        audioPath: voicePath,
+      },
       frameRate,
       segmentId: segment.id,
       segmentOrder: segment.order,
       frameIndex,
-      srtPath: srtPath,
-      imagePath,
       storyId: segment.storyId,
       videoId,
     };
@@ -152,6 +154,7 @@ export class StoryProcessingService implements IStoryProcessingService {
       data: jobData,
       queueName: WorkerEvents.Video,
       children: frameJobs,
+      opts: { failParentOnFailure: true },
     };
 
     await this.flowProducer.add({
@@ -161,7 +164,11 @@ export class StoryProcessingService implements IStoryProcessingService {
     });
   }
 
-  async combineSegmentVideo(videoId: string, storyId: string): Promise<void> {
+  async combineSegmentVideo(
+    videoId: string,
+    storyId: string,
+    tempPaths: TempFilePaths,
+  ): Promise<void> {
     const videosPath = `./tmp/videos/${storyId}`;
     const outputDir = "./tmp/finalized";
     const outputPath = path.join(outputDir, `finished_${storyId}.mp4`);
@@ -190,6 +197,7 @@ export class StoryProcessingService implements IStoryProcessingService {
       videoId,
       outputPath,
       videosPath,
+      tempPaths,
     };
 
     await this.videoQueue.add(VideoJobNames.COMBINE_SEGMENT_VIDEOS, jobData);

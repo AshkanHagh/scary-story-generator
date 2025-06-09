@@ -4,6 +4,7 @@ import { Job } from "bullmq";
 import {
   CombineSegmentVideosJobData,
   GenerateSegmentVideoJobData,
+  TempFilePaths,
 } from "../types";
 import ffmpeg from "fluent-ffmpeg";
 import * as path from "path";
@@ -15,9 +16,6 @@ import { v4 as uuid } from "uuid";
 import { S3Service } from "src/features/story/services/s3.service";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 
-// COMPLETED: add each segment video to s3
-// COMPLETED: add the combined videos into s3
-// TODO: refactor error handling and delete file on error
 @Processor(WorkerEvents.Video, { concurrency: 4 })
 export class VideoWorker extends WorkerHost {
   constructor(
@@ -44,9 +42,17 @@ export class VideoWorker extends WorkerHost {
             .updateCompletedSegment(payload.storyId);
 
           if (videoStatus.completedSegments === videoStatus.totalSegments) {
+            const tempPaths: TempFilePaths = {
+              audioPath: payload.tempPaths.audioPath,
+              framePath: payload.tempPaths.framePath,
+              srtPath: payload.tempPaths.srtPath,
+              imagePath: payload.tempPaths.imagePath,
+            };
+
             await this.service.combineSegmentVideo(
               payload.videoId,
               payload.storyId,
+              tempPaths,
             );
           }
 
@@ -64,6 +70,8 @@ export class VideoWorker extends WorkerHost {
     } catch (error: unknown) {
       console.log("Error processing job:", job.name);
       console.log(error);
+
+      throw new StoryError(StoryErrorType.FailedToGenerateVideo, error);
     }
   }
 
@@ -80,15 +88,15 @@ export class VideoWorker extends WorkerHost {
     try {
       await new Promise((resolve, reject) => {
         ffmpeg()
-          .input(path.join(payload.framePath, "frame_%04d.jpeg"))
+          .input(path.join(payload.tempPaths.framePath, "frame_%04d.jpeg"))
           .inputOptions([`-framerate ${payload.frameRate}`])
-          .input(payload.audioPath)
+          .input(payload.tempPaths.audioPath)
           .outputOption([
             "-c:v libx264",
             "-pix_fmt yuv420p",
             "-c:a aac",
             "-shortest",
-            `-vf subtitles='${payload.srtPath}:force_style=FontName=Arial,FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=1,Shadow=2,Alignment=2,MarginV=20',scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`,
+            `-vf subtitles='${payload.tempPaths.srtPath}:force_style=FontName=Arial,FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=1,Shadow=2,Alignment=2,MarginV=20',scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`,
             "-vsync 2",
             "-y",
           ])
@@ -101,17 +109,22 @@ export class VideoWorker extends WorkerHost {
       const fileStream = fsStream.createReadStream(outputPath);
 
       const videoId = uuid();
-      await this.s3.putObject(videoId, "video/mp4", fileStream);
+      await this.s3.putObject(videoId, "video/mp4", fileStream, true);
       await this.repo.segment().update(payload.segmentId, {
         videoId,
       });
+    } catch (error: unknown) {
+      await this.repo.segment().update(payload.segmentId, {
+        isGenerating: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
     } finally {
       await Promise.all([
-        // fs.rm(outputPath, { recursive: true, force: true }),
-        // fs.rm(payload.framePath, { recursive: true, force: true }),
-        // fs.rm(payload.srtPath, { recursive: true, force: true }),
-        // fs.rm(payload.audioPath, { recursive: true, force: true }),
-        // fs.rm(payload.imagePath, { recursive: true, force: true }),
+        fs.rm(outputPath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.framePath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.srtPath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.audioPath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.imagePath, { recursive: true, force: true }),
       ]);
     }
   }
@@ -150,6 +163,7 @@ export class VideoWorker extends WorkerHost {
         payload.videoId,
         "video/mp4",
         fileStream,
+        true,
       );
       await this.repo.video().update(payload.videoId, {
         status: "completed",
@@ -158,13 +172,17 @@ export class VideoWorker extends WorkerHost {
     } catch (error: unknown) {
       await this.repo.video().update(payload.videoId, {
         status: "failed",
-        error: error as string,
+        error: error instanceof Error ? error.message : String(error),
       });
       throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
     } finally {
       await Promise.all([
-        // fs.rm(payload.outputPath, { recursive: true, force: true }),
-        // fs.rm(payload.videosPath, { recursive: true, force: true }),
+        fs.rm(payload.outputPath, { recursive: true, force: true }),
+        fs.rm(payload.videosPath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.framePath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.srtPath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.audioPath, { recursive: true, force: true }),
+        fs.rm(payload.tempPaths.imagePath, { recursive: true, force: true }),
       ]);
     }
   }

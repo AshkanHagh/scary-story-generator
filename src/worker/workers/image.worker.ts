@@ -47,12 +47,21 @@ export class ImageWorker extends WorkerHost {
             payload.segment.voiceId!,
           );
 
-          await this.service.generateSegmentVideoFrame(
-            payload.videoId,
-            payload.segment,
-            imagePath,
-            voicePath,
-          );
+          try {
+            await this.service.generateSegmentVideoFrame(
+              payload.videoId,
+              payload.segment,
+              imagePath,
+              voicePath,
+            );
+          } catch (error) {
+            await Promise.all([
+              fs.rm(imagePath, { recursive: true, force: true }),
+              fs.rm(voicePath, { recursive: true, force: true }),
+            ]);
+
+            throw error;
+          }
 
           break;
         }
@@ -67,7 +76,9 @@ export class ImageWorker extends WorkerHost {
       console.log("Job processed successfully:", job.name);
     } catch (error: unknown) {
       console.log("Error processing job:", job.name);
-      console.log(error);
+      console.error(error);
+
+      throw new StoryError(StoryErrorType.FailedToGenerateImage, error);
     }
   }
 
@@ -109,8 +120,7 @@ export class ImageWorker extends WorkerHost {
     } catch (error: unknown) {
       await this.repo.segment().update(payload.segmentId, {
         isGenerating: false,
-        // TODO: use error message
-        error: error as string,
+        error: error instanceof Error ? error.message : String(error),
       });
 
       throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);

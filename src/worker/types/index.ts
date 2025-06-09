@@ -46,16 +46,21 @@ export type GenerateSegmentVideoJobData = {
   storyId: string;
   segmentOrder: number;
   frameRate: number;
-  framePath: string;
-  audioPath: string;
   frameIndex: number;
-  srtPath: string;
-  imagePath: string;
   videoId: string;
+  tempPaths: TempFilePaths;
 };
 
 export type CombineSegmentVideosJobData = {
   videoId: string;
   videosPath: string;
   outputPath: string;
+  tempPaths: TempFilePaths;
+};
+
+export type TempFilePaths = {
+  framePath: string;
+  audioPath: string;
+  srtPath: string;
+  imagePath: string;
 };

@@ -1,5 +1,6 @@
 import { ISegment } from "src/drizzle/schema";
 import { CreateSegmentDto, CreateStoryDto } from "../dtos";
+import { TempFilePaths } from "src/worker/types";
 
 export interface IStoryService {
   createStory(userId: string, payload: CreateStoryDto): Promise<string>;
@@ -14,6 +15,7 @@ export interface IStoryService {
 export interface IS3Service {
   putObject(id: string, mimetype: string, buffer: Buffer): Promise<string>;
   getObject(id: string): Promise<Buffer>;
+  deleteObject(id: string): Promise<void>;
 }
 
 export interface IStoryProcessingService {
@@ -37,5 +39,9 @@ export interface IStoryProcessingService {
     imagePath: string,
     voicePath: string,
   ): Promise<void>;
-  combineSegmentVideo(videoId: string, storyId: string): Promise<void>;
+  combineSegmentVideo(
+    videoId: string,
+    storyId: string,
+    tempPaths: TempFilePaths,
+  ): Promise<void>;
 }

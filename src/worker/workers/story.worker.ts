@@ -57,7 +57,9 @@ export class StoryWorker extends WorkerHost {
       console.log("Job processed successfully:", job.name);
     } catch (error: unknown) {
       console.log("Error processing job:", job.name);
-      console.log(error);
+      console.error(error);
+
+      throw new StoryError(StoryErrorType.FailedToGenerateStory, error);
     }
   }
 
@@ -128,8 +130,7 @@ export class StoryWorker extends WorkerHost {
     } catch (error: unknown) {
       await this.repo.segment().update(payload.segmentId, {
         isGenerating: false,
-        // TODO: use error message
-        error: error as string,
+        error: error instanceof Error ? error.message : String(error),
       });
       throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
     }
