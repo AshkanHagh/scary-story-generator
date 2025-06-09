@@ -32,9 +32,10 @@ export interface IStoryProcessingService {
   ): Promise<void>;
 
   generateSegmentVideoFrame(
+    videoId: string,
     segment: ISegment,
     imagePath: string,
     voicePath: string,
   ): Promise<void>;
-  combineSegmentVideo(storyId: string, videosPath: string): Promise<void>;
+  combineSegmentVideo(videoId: string, storyId: string): Promise<void>;
 }

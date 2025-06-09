@@ -31,6 +31,7 @@ export type GenerateSegmentVoiceJobData = {
 };
 
 export type DownloadSegmentAssetJobData = {
+  videoId: string;
   segment: ISegment;
 };
 
@@ -47,13 +48,14 @@ export type GenerateSegmentVideoJobData = {
   frameRate: number;
   framePath: string;
   audioPath: string;
-  outputDir: string;
   frameIndex: number;
   srtPath: string;
   imagePath: string;
+  videoId: string;
 };
 
 export type CombineSegmentVideosJobData = {
+  videoId: string;
   videosPath: string;
   outputPath: string;
 };

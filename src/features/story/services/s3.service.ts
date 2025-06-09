@@ -7,6 +7,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { AwsConfig, IAwsConfig } from "src/configs/aws.config";
+import { Readable } from "stream";
 
 @Injectable()
 export class S3Service implements IS3Service {
@@ -27,7 +28,7 @@ export class S3Service implements IS3Service {
   async putObject(
     id: string,
     mimetype: string,
-    buffer: Buffer,
+    buffer: Buffer | Readable,
   ): Promise<string> {
     try {
       const command = new PutObjectCommand({

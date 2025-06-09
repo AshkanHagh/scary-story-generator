@@ -48,6 +48,7 @@ export class ImageWorker extends WorkerHost {
           );
 
           await this.service.generateSegmentVideoFrame(
+            payload.videoId,
             payload.segment,
             imagePath,
             voicePath,

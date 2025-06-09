@@ -11,6 +11,11 @@ import {
   IStoryInsertForm,
   IStoryView,
 } from "src/drizzle/schema/story.schema";
+import {
+  IVideo,
+  IVideoInsertForm,
+  IVideoUpdateForm,
+} from "src/drizzle/schema/video.schema";
 
 export interface IUserRepository {
   insert(form: IUserInsertForm): Promise<IUser>;
@@ -38,4 +43,9 @@ export interface IVideoProcessingStatusRepository {
     storyId: string,
     form: Partial<IVideoProcessingStatusInsertForm>,
   ): Promise<IVideoProcessingStatus>;
+}
+
+export interface IVideoRepository {
+  insert(form: IVideoInsertForm): Promise<IVideo>;
+  update(id: string, form: IVideoUpdateForm): Promise<void>;
 }

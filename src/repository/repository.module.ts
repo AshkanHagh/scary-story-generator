@@ -5,6 +5,7 @@ import { UserRepository } from "./repositories/user";
 import { StoryRepository } from "./repositories/story";
 import { SegmentRepository } from "./repositories/segment";
 import { VideoProcessingStatusRepository } from "./repositories/video-processing-status";
+import { VideoRepository } from "./repositories/video";
 
 @Module({
   imports: [DrizzleModule],
@@ -14,6 +15,7 @@ import { VideoProcessingStatusRepository } from "./repositories/video-processing
     StoryRepository,
     SegmentRepository,
     VideoProcessingStatusRepository,
+    VideoRepository,
   ],
   exports: [RepositoryService],
 })

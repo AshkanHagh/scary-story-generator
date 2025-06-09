@@ -23,6 +23,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import { generateSRTFile } from "../utils";
 import { IStoryProcessingService } from "../interfaces/service";
+import { S3Service } from "./s3.service";
 
 @Injectable()
 export class StoryProcessingService implements IStoryProcessingService {
@@ -34,6 +35,7 @@ export class StoryProcessingService implements IStoryProcessingService {
     @InjectQueue(WorkerEvents.Video) private videoQueue: Queue,
     private repo: RepositoryService,
     private storyAgent: StoryAgentService,
+    private s3: S3Service,
   ) {
     this.flowProducer = new FlowProducer({
       connection: this.imageQueue.opts.connection,
@@ -90,19 +92,18 @@ export class StoryProcessingService implements IStoryProcessingService {
   }
 
   async generateSegmentVideoFrame(
+    videoId: string,
     segment: ISegment,
     imagePath: string,
     voicePath: string,
   ): Promise<void> {
     const frameRate = 24;
     const outputDir = `./tmp/frames/segment_${segment.id}`;
-    const videoOutputDir = "./tmp/videos";
     const srtOutputDir = "./tmp/srt";
     const srtPath = path.join(srtOutputDir, `segment_${segment.id}.srt`);
 
     await Promise.all([
       fs.mkdir(outputDir, { recursive: true }),
-      fs.mkdir(videoOutputDir, { recursive: true }),
       fs.mkdir(srtOutputDir, { recursive: true }),
     ]);
 
@@ -138,13 +139,13 @@ export class StoryProcessingService implements IStoryProcessingService {
       audioPath: voicePath,
       framePath: outputDir,
       frameRate,
-      outputDir: videoOutputDir,
       segmentId: segment.id,
       segmentOrder: segment.order,
       frameIndex,
       srtPath: srtPath,
       imagePath,
       storyId: segment.storyId,
+      videoId,
     };
     const segmentVideoJob: FlowJob = {
       name: VideoJobNames.GENERATE_SEGMENT_VIDEO,
@@ -160,16 +161,33 @@ export class StoryProcessingService implements IStoryProcessingService {
     });
   }
 
-  async combineSegmentVideo(
-    storyId: string,
-    videosPath: string,
-  ): Promise<void> {
-    const outputDir = "./tmp/completed_videos";
+  async combineSegmentVideo(videoId: string, storyId: string): Promise<void> {
+    const videosPath = `./tmp/videos/${storyId}`;
+    const outputDir = "./tmp/finalized";
     const outputPath = path.join(outputDir, `finished_${storyId}.mp4`);
 
-    await fs.mkdir(outputDir, { recursive: true });
+    await Promise.all([
+      fs.mkdir(videosPath, { recursive: true }),
+      fs.mkdir(outputDir, { recursive: true }),
+    ]);
+
+    const videoSegments = await this.repo.story().findWithSegments(storyId);
+
+    await Promise.all(
+      videoSegments!.segments.map(async (segment) => {
+        const segmentVideo = await this.s3.getObject(segment.videoId!);
+
+        const videoOrder = String(segment.order).padStart(2, "0");
+        const outputPath = path.join(
+          videosPath,
+          `segment_video_${segment.id}_${videoOrder}.mp4`,
+        );
+        await fs.writeFile(outputPath, segmentVideo);
+      }),
+    );
 
     const jobData: CombineSegmentVideosJobData = {
+      videoId,
       outputPath,
       videosPath,
     };

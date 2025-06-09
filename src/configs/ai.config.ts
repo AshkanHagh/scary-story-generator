@@ -3,12 +3,14 @@ import { ConfigType, registerAs } from "@nestjs/config";
 
 export const aiConfig = registerAs("ai", () => {
   return {
-    openai: {
+    liara_openai: {
       endpoint: process.env.LIARA_OPEN_AI_ENDPINT,
       secret: process.env.LIARA_OPEN_AI_SECRET,
     },
+    openai: {
+      secret: process.env.OPENAI_SECRET,
+    },
     replicate: {
-      model: process.env.REPLICATE_MODEL!,
       secret: process.env.REPLICATE_API_TOKEN!,
     },
   };

@@ -8,14 +8,22 @@ import {
 import ffmpeg from "fluent-ffmpeg";
 import * as path from "path";
 import * as fs from "fs/promises";
+import * as fsStream from "fs";
 import { RepositoryService } from "src/repository/repository.service";
 import { StoryProcessingService } from "src/features/story/services/story-processing.service";
+import { v4 as uuid } from "uuid";
+import { S3Service } from "src/features/story/services/s3.service";
+import { StoryError, StoryErrorType } from "src/filter/exception";
 
+// COMPLETED: add each segment video to s3
+// COMPLETED: add the combined videos into s3
+// TODO: refactor error handling and delete file on error
 @Processor(WorkerEvents.Video, { concurrency: 4 })
 export class VideoWorker extends WorkerHost {
   constructor(
     private repo: RepositoryService,
     private service: StoryProcessingService,
+    private s3: S3Service,
   ) {
     super();
   }
@@ -28,25 +36,18 @@ export class VideoWorker extends WorkerHost {
         case VideoJobNames.GENERATE_SEGMENT_VIDEO as string: {
           const payload = job.data as GenerateSegmentVideoJobData;
 
-          try {
-            console.log("Generating segment video...");
-            await this.createSegmentVideo(payload);
+          console.log("Generating segment video...");
+          await this.createSegmentVideo(payload);
 
-            const videoStatus = await this.repo
-              .videoProcessingStatus()
-              .updateCompletedSegment(payload.storyId);
+          const videoStatus = await this.repo
+            .videoProcessingStatus()
+            .updateCompletedSegment(payload.storyId);
 
-            if (videoStatus.completedSegments === videoStatus.totalSegments) {
-              await this.service.combineSegmentVideo(
-                payload.storyId,
-                payload.outputDir,
-              );
-            }
-          } finally {
-            await fs.rm(payload.framePath, { recursive: true, force: true });
-            await fs.rm(payload.audioPath, { recursive: true, force: true });
-            await fs.rm(payload.srtPath, { recursive: true, force: true });
-            await fs.rm(payload.imagePath, { recursive: true, force: true });
+          if (videoStatus.completedSegments === videoStatus.totalSegments) {
+            await this.service.combineSegmentVideo(
+              payload.videoId,
+              payload.storyId,
+            );
           }
 
           break;
@@ -67,30 +68,52 @@ export class VideoWorker extends WorkerHost {
   }
 
   private async createSegmentVideo(payload: GenerateSegmentVideoJobData) {
+    const videoOutputDir = `./tmp/tmp_videos/${payload.storyId}`;
+    await fs.mkdir(videoOutputDir, { recursive: true });
+
+    const videoOrder = String(payload.segmentOrder).padStart(2, "0");
     const outputPath = path.join(
-      payload.outputDir,
-      `video_${payload.segmentId}_${String(payload.segmentOrder).padStart(2, "0")}.mp4`,
+      videoOutputDir,
+      `video_${payload.segmentId}_${videoOrder}.mp4`,
     );
 
-    return new Promise((resolve, reject) => {
-      ffmpeg()
-        .input(path.join(payload.framePath, "frame_%04d.jpeg"))
-        .inputOptions([`-framerate ${payload.frameRate}`])
-        .input(payload.audioPath)
-        .outputOption([
-          "-c:v libx264",
-          "-pix_fmt yuv420p",
-          "-c:a aac",
-          "-shortest",
-          `-vf subtitles='${payload.srtPath}:force_style=FontName=Arial,FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=1,Shadow=2,Alignment=2,MarginV=20',scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`,
-          "-vsync 2",
-          "-y",
-        ])
-        .output(outputPath, { end: true })
-        .on("end", resolve)
-        .on("error", reject)
-        .run();
-    });
+    try {
+      await new Promise((resolve, reject) => {
+        ffmpeg()
+          .input(path.join(payload.framePath, "frame_%04d.jpeg"))
+          .inputOptions([`-framerate ${payload.frameRate}`])
+          .input(payload.audioPath)
+          .outputOption([
+            "-c:v libx264",
+            "-pix_fmt yuv420p",
+            "-c:a aac",
+            "-shortest",
+            `-vf subtitles='${payload.srtPath}:force_style=FontName=Arial,FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=1,Shadow=2,Alignment=2,MarginV=20',scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`,
+            "-vsync 2",
+            "-y",
+          ])
+          .output(outputPath, { end: true })
+          .on("end", resolve)
+          .on("error", reject)
+          .run();
+      });
+
+      const fileStream = fsStream.createReadStream(outputPath);
+
+      const videoId = uuid();
+      await this.s3.putObject(videoId, "video/mp4", fileStream);
+      await this.repo.segment().update(payload.segmentId, {
+        videoId,
+      });
+    } finally {
+      await Promise.all([
+        // fs.rm(outputPath, { recursive: true, force: true }),
+        // fs.rm(payload.framePath, { recursive: true, force: true }),
+        // fs.rm(payload.srtPath, { recursive: true, force: true }),
+        // fs.rm(payload.audioPath, { recursive: true, force: true }),
+        // fs.rm(payload.imagePath, { recursive: true, force: true }),
+      ]);
+    }
   }
 
   private async combineSegmentVideos(payload: CombineSegmentVideosJobData) {
@@ -106,61 +129,43 @@ export class VideoWorker extends WorkerHost {
     const fileListContent = videoFiles
       .map((file) => `file '${path.resolve(payload.videosPath, file)}'`)
       .join("\n");
-    await fs.writeFile(fileListPath, fileListContent);
 
-    return new Promise((resolve, reject) => {
-      ffmpeg()
-        .input(fileListPath)
-        .inputOptions(["-f concat", "-safe 0"])
-        .outputOptions(["-c copy", "-y"])
-        .output(payload.outputPath)
-        .on("end", resolve)
-        .on("error", reject)
-        .run();
-    });
+    try {
+      await fs.writeFile(fileListPath, fileListContent);
+
+      await new Promise((resolve, reject) => {
+        ffmpeg()
+          .input(fileListPath)
+          .inputOptions(["-f concat", "-safe 0"])
+          .outputOptions(["-c copy", "-y"])
+          .output(payload.outputPath)
+          .on("end", resolve)
+          .on("error", reject)
+          .run();
+      });
+
+      const fileStream = fsStream.createReadStream(payload.outputPath);
+
+      const videoUrl = await this.s3.putObject(
+        payload.videoId,
+        "video/mp4",
+        fileStream,
+      );
+      await this.repo.video().update(payload.videoId, {
+        status: "completed",
+        url: videoUrl,
+      });
+    } catch (error: unknown) {
+      await this.repo.video().update(payload.videoId, {
+        status: "failed",
+        error: error as string,
+      });
+      throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
+    } finally {
+      await Promise.all([
+        // fs.rm(payload.outputPath, { recursive: true, force: true }),
+        // fs.rm(payload.videosPath, { recursive: true, force: true }),
+      ]);
+    }
   }
-
-  // NOTE: Currently, in this architecture we don't need to upload the video to S3 and update the database.
-  // Uncomment the following lines to upload the video to S3 and update the database
-
-  // private async createSegmentVideo(payload: GenerateSegmentVideoJobData) {
-  //   const passThrough = new PassThrough();
-  //   const outputPath = path.join(
-  //     payload.outputDir,
-  //     `video_${payload.segmentId}_${String(payload.segmentOrder).padStart(2, "0")}.mp4`,
-  //   );
-  //   const chunks: Buffer[] = [];
-
-  //   passThrough.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-
-  //   const videoBuffer: Promise<Buffer> = new Promise((resolve, reject) => {
-  //     ffmpeg()
-  //       .input(path.join(payload.framePath, "frame_%04d.jpeg"))
-  //       // .inputFPS(payload.frameRate)
-  //       .inputOptions([`-framerate ${payload.frameRate}`])
-  //       .input(payload.audioPath)
-  //       .outputOption([
-  //         "-c:v libx264",
-  //         "-pix_fmt yuv420p",
-  //         "-c:a aac",
-  //         "-shortest",
-  //         `-vf subtitles='${payload.srtPath}:force_style=FontName=Arial,FontSize=24,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=1,Shadow=2,Alignment=2,MarginV=20',scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2`,
-  //         "-vsync 2",
-  //         "-y",
-  //       ])
-  //       .output(outputPath, { end: true })
-  //       .on("end", () => {
-  //         const buffer = Buffer.concat(chunks);
-  //         resolve(buffer);
-  //       })
-  //       .on("error", reject)
-  //       .run();
-  //   });
-
-  // const videoId = uuid();
-  // await this.s3.putObject(videoId, "video/mp4", await videoBuffer);
-  // await this.repo.segment().update(payload.segmentId, {
-  //   videoId,
-  // });
-  // }
 }

@@ -1,6 +1,6 @@
 import { pgTable } from "drizzle-orm/pg-core";
 import { StoryTable } from "./story.schema";
-import { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
 
 export const VideoProcessingStatusTable = pgTable(
   "video_processing_status",
@@ -19,6 +19,16 @@ export const VideoProcessingStatusTable = pgTable(
         .$onUpdate(() => new Date()),
     };
   },
+);
+
+export const VideoProcessingStatusRelations = relations(
+  VideoProcessingStatusTable,
+  ({ one }) => ({
+    story: one(StoryTable, {
+      fields: [VideoProcessingStatusTable.storyId],
+      references: [StoryTable.id],
+    }),
+  }),
 );
 
 export type IVideoProcessingStatus = InferSelectModel<

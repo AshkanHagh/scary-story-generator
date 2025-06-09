@@ -46,6 +46,7 @@ export class StoryService implements IStoryService {
     return story.id;
   }
 
+  // TODO: add check for story already have segment or not
   async generateSegment(
     userId: string,
     storyId: string,
@@ -69,13 +70,22 @@ export class StoryService implements IStoryService {
 
   async generateVideo(userId: string, storyId: string): Promise<void> {
     const story = await this.repo.story().findWithSegments(storyId);
-
     if (!story) {
       throw new StoryError(StoryErrorType.NotFound);
     }
+
     if (story.userId !== userId) {
       throw new StoryError(StoryErrorType.HasNoPermission);
     }
+    if (story.status !== "completed") {
+      throw new StoryError(StoryErrorType.NotCompleted);
+    }
+
+    story.segments.forEach((segment) => {
+      if (segment.isGenerating) {
+        throw new StoryError(StoryErrorType.NotCompleted);
+      }
+    });
 
     await this.repo.videoProcessingStatus().insert({
       storyId: story.id,
@@ -83,9 +93,16 @@ export class StoryService implements IStoryService {
       completedSegments: 0,
     });
 
+    const video = await this.repo.video().insert({
+      status: "pending",
+      storyId: story.id,
+      userId,
+    });
+
     await Promise.all([
       story.segments.map((segment) => {
         const jobData: DownloadSegmentAssetJobData = {
+          videoId: video.id,
           segment,
         };
         return this.imageQueue.add(
