@@ -59,6 +59,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 migrations/
 package-lock.json*
 
-# NOT COMPLETED YET(WEB SOCKET)
-ws/
 tmp/

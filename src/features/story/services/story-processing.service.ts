@@ -142,6 +142,7 @@ export class StoryProcessingService
     const results = await Promise.allSettled(framePromises);
     const errors = results.filter((result) => result.status === "rejected");
 
+    // TODO: write errors in file
     if (errors.length > 0) {
       const error = new Error(
         `generate segment ${segment.id} failed: ${errors[0].reason}`,
@@ -181,6 +182,7 @@ export class StoryProcessingService
 
     const videoSegments = await this.repo.story().findWithSegments(storyId);
 
+    // download and add segment video to tmp disk
     await Promise.all(
       videoSegments!.segments.map(async (segment) => {
         const segmentVideo = await this.s3.getObject(segment.videoId!);
