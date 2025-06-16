@@ -15,7 +15,7 @@ import { StoryService } from "./story.service";
 import { User } from "../auth/decorators/user.decorator";
 import { ZodValidationPipe } from "src/utils/zod.validation";
 import { AnonymousAuthGuard } from "../auth/guards/anonymous-auth.guard";
-import { ISegment, IStory } from "src/drizzle/schema";
+import { ISegment, IStory, IVideoRecord } from "src/drizzle/schema";
 import { PollSegmentsStatusResponse } from "./types";
 
 @Controller("story")
@@ -66,6 +66,14 @@ export class StoryController implements IStoryController {
   ): Promise<void> {
     await this.storyService.generateVideo(userId, storyId);
     return;
+  }
+
+  @Get("/video/:story_id/poll")
+  async pollStoryVideoStatus(
+    @User("id") userId: string,
+    @Param("story_id", new ParseUUIDPipe()) storyId: string,
+  ): Promise<IVideoRecord> {
+    return this.storyService.pollStoryVideoStatus(userId, storyId);
   }
 
   @Get("/:story_id")

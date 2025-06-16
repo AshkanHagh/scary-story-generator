@@ -1,4 +1,4 @@
-import { ISegment, IStory } from "src/drizzle/schema";
+import { ISegment, IStory, IVideoRecord } from "src/drizzle/schema";
 import { CreateStoryDto } from "../dtos";
 import { TempFilePaths } from "src/worker/types";
 import { PollSegmentsStatusResponse } from "../types";
@@ -13,6 +13,7 @@ export interface IStoryService {
     userId: string,
     storyId: string,
   ): Promise<PollSegmentsStatusResponse>;
+  pollStoryVideoStatus(userId: string, storyId: string): Promise<IVideoRecord>;
 }
 
 export interface IS3Service {

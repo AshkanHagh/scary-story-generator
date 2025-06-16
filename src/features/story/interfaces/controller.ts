@@ -1,5 +1,5 @@
 import { CreateStoryDto } from "../dtos";
-import { ISegment, IStory } from "src/drizzle/schema";
+import { ISegment, IStory, IVideoRecord } from "src/drizzle/schema";
 import { PollSegmentsStatusResponse } from "../types";
 
 export interface IStoryController {
@@ -12,4 +12,5 @@ export interface IStoryController {
     userId: string,
     storyId: string,
   ): Promise<PollSegmentsStatusResponse>;
+  pollStoryVideoStatus(userId: string, storyId: string): Promise<IVideoRecord>;
 }

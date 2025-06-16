@@ -45,3 +45,11 @@ export const VideoRelations = relations(VideoTable, ({ one }) => ({
 export type IVideo = typeof VideoTable.$inferSelect;
 export type IVideoInsertForm = typeof VideoTable.$inferInsert;
 export type IVideoUpdateForm = Partial<typeof VideoTable.$inferInsert>;
+export type IVideoRecord = {
+  id: string;
+  createdAt: Date | null;
+  userId: string;
+  storyId: string;
+  url: string | null;
+  status: "pending" | "failed" | "completed";
+};

@@ -21,4 +21,9 @@ export const UserRelation = relations(UserTable, ({ many }) => ({
 }));
 
 export type IUser = typeof UserTable.$inferSelect;
+export type IUserRecord = {
+  id: string;
+  isAnonymous: boolean;
+  createdAt: Date;
+};
 export type IUserInsertForm = typeof UserTable.$inferInsert;

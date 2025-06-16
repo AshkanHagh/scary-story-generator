@@ -10,9 +10,9 @@ import {
   GenerateImageContextJobData,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
-import { ISegment, IStory } from "src/drizzle/schema";
-import { setTimeout } from "timers";
+import { ISegment, IStory, IVideoRecord } from "src/drizzle/schema";
 import { PollSegmentsStatusResponse } from "./types";
+import { pollUntil } from "./utils";
 
 @Injectable()
 export class StoryService implements IStoryService {
@@ -108,61 +108,65 @@ export class StoryService implements IStoryService {
   ): Promise<PollSegmentsStatusResponse> {
     await this.repo.story().userHasAccess(storyId, userId);
 
-    const startTime = Date.now();
     const pollInterval = 1000 * 1;
     const maxWaitTime = 1000 * 30;
 
-    return new Promise((resolve, reject) => {
-      const checkStatus = async () => {
-        try {
-          const story = await this.repo.story().findWithSegments(storyId);
-          if (!story) {
-            throw new StoryError(StoryErrorType.NotFound, "Story not found");
-          }
-          if (story.segments.length === 0) {
-            if (Date.now() - startTime >= maxWaitTime) {
-              resolve({
-                isCompleted: false,
-                segments: [],
-              });
-              return;
-            }
+    const fetchFn = async (): Promise<PollSegmentsStatusResponse> => {
+      const story = await this.repo.story().findWithSegments(storyId);
+      if (!story) {
+        throw new StoryError(StoryErrorType.NotFound, "Story not found");
+      }
 
-            // eslint-disable-next-line
-            setTimeout(checkStatus, pollInterval);
-            return;
-          }
+      const completedSegments = story.segments.filter(
+        (s) => s.status === "completed",
+      );
+      const isCompleted = completedSegments.length === story.segments.length;
 
-          const completedSegments = story.segments.filter(
-            (s) => s.status === "completed",
-          );
-          const isCompleted =
-            completedSegments.length === story.segments.length;
-
-          const response: PollSegmentsStatusResponse = {
-            isCompleted,
-            segments: story.segments,
-          };
-
-          const hasChanges = story.segments.some((s) => s.status !== "pending");
-          if (hasChanges) {
-            resolve(response);
-            return;
-          }
-
-          if (Date.now() - startTime >= pollInterval) {
-            resolve(response);
-            return;
-          }
-
-          // eslint-disable-next-line
-          setTimeout(checkStatus, pollInterval);
-        } catch (error: unknown) {
-          reject(error as Error);
-        }
+      return {
+        isCompleted,
+        segments: story.segments,
       };
+    };
 
-      checkStatus();
+    const shouldResolve = (data: PollSegmentsStatusResponse) => {
+      const hasChanges = data.segments.some((s) => s.status !== "pending");
+      return hasChanges || data.isCompleted;
+    };
+
+    return await pollUntil(fetchFn, shouldResolve, {
+      pollInterval,
+      maxWaitTime,
+    });
+  }
+
+  async pollStoryVideoStatus(
+    userId: string,
+    storyId: string,
+  ): Promise<IVideoRecord> {
+    const pollInterval = 1000 * 1;
+
+    const fetchFn = async () => {
+      const video = await this.repo.video().findByStoryId(storyId);
+      await this.repo.video().userHasAccess(video.id, userId);
+
+      const videoRecord: IVideoRecord = {
+        id: video.id,
+        status: video.status,
+        url: video.url,
+        createdAt: video.createdAt,
+        storyId: video.storyId,
+        userId: video.userId,
+      };
+      return videoRecord;
+    };
+
+    const shouldResolve = (video: IVideoRecord) => {
+      const hasChange = video.status !== "pending";
+      return hasChange;
+    };
+
+    return await pollUntil(fetchFn, shouldResolve, {
+      pollInterval,
     });
   }
 }
