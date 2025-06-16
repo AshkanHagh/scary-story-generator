@@ -8,12 +8,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { IStoryController } from "./interfaces/controller";
-import {
-  CreateSegmentDto,
-  CreateSegmentSchema,
-  CreateStoryDto,
-  CreateStorySchema,
-} from "./dtos";
+import { CreateStoryDto, CreateStorySchema } from "./dtos";
 import { StoryService } from "./story.service";
 import { User } from "../auth/decorators/user.decorator";
 import { ZodValidationPipe } from "src/utils/zod.validation";
@@ -39,10 +34,9 @@ export class StoryController implements IStoryController {
   async generateSegment(
     @User("id") userId: string,
     @Param("story_id") storyId: string,
-    @Body(new ZodValidationPipe(CreateSegmentSchema)) payload: CreateSegmentDto,
     @Res() res: Response,
   ): Promise<Response> {
-    await this.storyService.generateSegment(userId, storyId, payload);
+    await this.storyService.generateSegment(userId, storyId);
     return res.status(HttpStatus.NO_CONTENT).json();
   }
 

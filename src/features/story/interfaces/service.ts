@@ -1,14 +1,10 @@
 import { ISegment, IStory } from "src/drizzle/schema";
-import { CreateSegmentDto, CreateStoryDto } from "../dtos";
+import { CreateStoryDto } from "../dtos";
 import { TempFilePaths } from "src/worker/types";
 
 export interface IStoryService {
   createStory(userId: string, payload: CreateStoryDto): Promise<IStory>;
-  generateSegment(
-    userId: string,
-    storyId: string,
-    payload: CreateSegmentDto,
-  ): Promise<void>;
+  generateSegment(userId: string, storyId: string): Promise<void>;
   generateVideo(userId: string, storyId: string): Promise<void>;
 }
 

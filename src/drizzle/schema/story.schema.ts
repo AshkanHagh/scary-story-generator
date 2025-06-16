@@ -12,7 +12,6 @@ export const StoryTable = pgTable("stories", (table) => {
       .references(() => UserTable.id, { onDelete: "cascade" }),
     title: table.varchar({ length: 128 }).notNull(),
     script: table.varchar({ length: 10_000 }).notNull(),
-    isVertical: table.boolean().notNull().default(false),
     context: table.text(),
     createdAt: table.timestamp().notNull().defaultNow(),
     updatedAt: table

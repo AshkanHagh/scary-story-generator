@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { CreateSegmentDto, CreateStoryDto } from "../dtos";
+import { CreateStoryDto } from "../dtos";
 import { IStory } from "src/drizzle/schema";
 
 export interface IStoryController {
@@ -7,7 +7,6 @@ export interface IStoryController {
   generateSegment(
     userId: string,
     storyId: string,
-    payload: CreateSegmentDto,
     res: Response,
   ): Promise<Response>;
   generateVideo(

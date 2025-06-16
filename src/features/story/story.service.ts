@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { IStoryService } from "./interfaces/service";
-import { CreateSegmentDto, CreateStoryDto } from "./dtos";
+import { CreateStoryDto } from "./dtos";
 import { RepositoryService } from "src/repository/repository.service";
 import { InjectQueue } from "@nestjs/bullmq";
 import { ImageJobNames, StoryJobNames, WorkerEvents } from "src/worker/event";
@@ -31,15 +31,9 @@ export class StoryService implements IStoryService {
   }
 
   // TODO: add check for story already have segment or not
-  async generateSegment(
-    userId: string,
-    storyId: string,
-    payload: CreateSegmentDto,
-  ): Promise<void> {
+  async generateSegment(userId: string, storyId: string): Promise<void> {
     // Throws error if story does not exist
     const story = await this.repo.story().userHasAccess(storyId, userId);
-
-    await this.repo.story().update(storyId, { isVertical: payload.isVertical });
 
     const jobData: GenerateImageContextJobData = {
       script: story.script,

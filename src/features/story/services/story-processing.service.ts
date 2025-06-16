@@ -97,7 +97,6 @@ export class StoryProcessingService
     const jobData: RegenrateSegmentImageJobData = {
       prompt: segment,
       segmentId: segmentId,
-      isVertical: story.isVertical,
     };
     await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE, jobData);
   }
