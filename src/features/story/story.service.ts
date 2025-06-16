@@ -7,10 +7,10 @@ import { ImageJobNames, StoryJobNames, WorkerEvents } from "src/worker/event";
 import { Queue } from "bullmq";
 import {
   DownloadSegmentAssetJobData,
-  GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
+import { IStory } from "src/drizzle/schema";
 
 @Injectable()
 export class StoryService implements IStoryService {
@@ -20,30 +20,14 @@ export class StoryService implements IStoryService {
     private repo: RepositoryService,
   ) {}
 
-  async createStory(userId: string, payload: CreateStoryDto): Promise<string> {
+  async createStory(userId: string, payload: CreateStoryDto): Promise<IStory> {
     const story = await this.repo.story().insert({
       title: payload.title,
       script: payload.script,
       userId,
-      status: "processing",
     });
 
-    if (payload.usingAi) {
-      const script = `
-        Generate a 130-word max video script that is five short paragraphs.
-        It should include a catchy hook or intro, a clear main learning point, and actionable advice for the viewer to try.
-        The topic of the script should match a title called: ${payload.title}
-      `;
-
-      const jobData: GenerateGuidedStoryJobData = {
-        script: script,
-        storyId: story.id,
-        userId,
-      };
-      await this.storyQueue.add(StoryJobNames.GENERATE_GUIDED_STORY, jobData);
-    }
-
-    return story.id;
+    return story;
   }
 
   // TODO: add check for story already have segment or not
@@ -54,9 +38,6 @@ export class StoryService implements IStoryService {
   ): Promise<void> {
     // Throws error if story does not exist
     const story = await this.repo.story().userHasAccess(storyId, userId);
-    if (story.status !== "completed") {
-      throw new StoryError(StoryErrorType.NotCompleted);
-    }
 
     await this.repo.story().update(storyId, { isVertical: payload.isVertical });
 
@@ -76,9 +57,6 @@ export class StoryService implements IStoryService {
 
     if (story.userId !== userId) {
       throw new StoryError(StoryErrorType.HasNoPermission);
-    }
-    if (story.status !== "completed") {
-      throw new StoryError(StoryErrorType.NotCompleted);
     }
 
     story.segments.forEach((segment) => {

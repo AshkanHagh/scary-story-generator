@@ -4,7 +4,6 @@ import { Job } from "bullmq";
 import { StoryAgentService } from "src/features/llm-agent/services/story-agent.service";
 import { RepositoryService } from "src/repository/repository.service";
 import {
-  GenerateGuidedStoryJobData,
   GenerateImageContextJobData,
   GenerateSegmentImageJobData,
   GenerateSegmentVoiceJobData,
@@ -30,12 +29,6 @@ export class StoryWorker extends WorkerHost {
       console.log("Processing job:", job.name);
 
       switch (job.name) {
-        case StoryJobNames.GENERATE_GUIDED_STORY as string: {
-          const payload = job.data as GenerateGuidedStoryJobData;
-          await this.generateGuidedStory(payload);
-
-          break;
-        }
         case StoryJobNames.GENERATE_IMAGE_CONTEXT as string: {
           const payload = job.data as GenerateImageContextJobData;
           await this.generateImageContext(payload);
@@ -59,25 +52,6 @@ export class StoryWorker extends WorkerHost {
       console.log("Error processing job:", job.name);
       console.error(error);
 
-      throw new StoryError(StoryErrorType.FailedToGenerateStory, error);
-    }
-  }
-
-  private async generateGuidedStory(
-    payload: GenerateGuidedStoryJobData,
-  ): Promise<void> {
-    try {
-      const script = await this.storyAgent.generateGuidedStory(payload.script);
-
-      await this.repo.story().update(payload.storyId, {
-        script,
-        userId: payload.userId,
-        status: "completed",
-      });
-    } catch (error: unknown) {
-      await this.repo.story().update(payload.storyId, {
-        status: "failed",
-      });
       throw new StoryError(StoryErrorType.FailedToGenerateStory, error);
     }
   }

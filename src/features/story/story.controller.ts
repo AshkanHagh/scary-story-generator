@@ -19,6 +19,7 @@ import { User } from "../auth/decorators/user.decorator";
 import { ZodValidationPipe } from "src/utils/zod.validation";
 import { AnonymousAuthGuard } from "../auth/guards/anonymous-auth.guard";
 import { Response } from "express";
+import { IStory } from "src/drizzle/schema";
 
 @Controller("story")
 @UseGuards(AnonymousAuthGuard)
@@ -29,9 +30,9 @@ export class StoryController implements IStoryController {
   async createStory(
     @User("id") userId: string,
     @Body(new ZodValidationPipe(CreateStorySchema)) payload: CreateStoryDto,
-  ): Promise<{ id: string }> {
-    const storyId = await this.storyService.createStory(userId, payload);
-    return { id: storyId };
+  ): Promise<IStory> {
+    const story = await this.storyService.createStory(userId, payload);
+    return story;
   }
 
   @Post("/segment/:story_id")
