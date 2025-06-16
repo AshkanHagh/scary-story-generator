@@ -1,6 +1,12 @@
-import { pgTable } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable } from "drizzle-orm/pg-core";
 import { StoryTable } from "./story.schema";
 import { relations } from "drizzle-orm";
+
+export const SegmentStatus = pgEnum("status_enum", [
+  "pending",
+  "failed",
+  "completed",
+]);
 
 export const SegmentTable = pgTable("segments", (table) => {
   return {
@@ -15,7 +21,8 @@ export const SegmentTable = pgTable("segments", (table) => {
     imageId: table.uuid(),
     voiceId: table.uuid(),
     videoId: table.uuid(),
-    isGenerating: table.boolean().notNull().default(false),
+    imageUrl: table.text(),
+    status: SegmentStatus().notNull(),
     error: table.text(),
     createdAt: table.timestamp().notNull().defaultNow(),
     updatedAt: table

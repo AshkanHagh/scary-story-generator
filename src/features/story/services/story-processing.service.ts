@@ -65,7 +65,7 @@ export class StoryProcessingService
       storyId,
       text,
       order,
-      isGenerating: true,
+      status: "pending",
     });
 
     await Promise.all([

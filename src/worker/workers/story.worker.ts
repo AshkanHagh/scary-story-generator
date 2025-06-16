@@ -103,7 +103,7 @@ export class StoryWorker extends WorkerHost {
       await this.repo.segment().update(payload.segmentId, { voiceId });
     } catch (error: unknown) {
       await this.repo.segment().update(payload.segmentId, {
-        isGenerating: false,
+        status: "failed",
         error: error instanceof Error ? error.message : String(error),
       });
       throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);

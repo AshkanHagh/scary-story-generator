@@ -1,12 +1,18 @@
 import { ISegment, IStory } from "src/drizzle/schema";
 import { CreateStoryDto } from "../dtos";
 import { TempFilePaths } from "src/worker/types";
+import { PollSegmentsStatusResponse } from "../types";
 
 export interface IStoryService {
   createStory(userId: string, payload: CreateStoryDto): Promise<IStory>;
   generateSegment(userId: string, storyId: string): Promise<void>;
   generateVideo(userId: string, storyId: string): Promise<void>;
   getStory(userId: string, storyId: string): Promise<IStory>;
+  getSegments(userId: string, storyId: string): Promise<ISegment[]>;
+  pollSegmentStatus(
+    userId: string,
+    storyId: string,
+  ): Promise<PollSegmentsStatusResponse>;
 }
 
 export interface IS3Service {

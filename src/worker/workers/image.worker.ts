@@ -99,18 +99,18 @@ export class ImageWorker extends WorkerHost {
         .toBuffer();
 
       const imageId = uuid();
-      await Promise.all([
-        this.s3.putObject(imageId, "image/webp", originalImage),
-      ]);
+      const url = await this.s3.putObject(imageId, "image/webp", originalImage);
 
       await this.repo.segment().update(payload.segmentId, {
-        isGenerating: false,
+        // mark as completed because the image takes longer then voice to generate so the last task is image
+        status: "completed",
         prompt: payload.prompt,
         imageId,
+        imageUrl: url,
       });
     } catch (error: unknown) {
       await this.repo.segment().update(payload.segmentId, {
-        isGenerating: false,
+        status: "failed",
         error: error instanceof Error ? error.message : String(error),
       });
 

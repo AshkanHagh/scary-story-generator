@@ -10,7 +10,9 @@ import {
   GenerateImageContextJobData,
 } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
-import { IStory } from "src/drizzle/schema";
+import { ISegment, IStory } from "src/drizzle/schema";
+import { setTimeout } from "timers";
+import { PollSegmentsStatusResponse } from "./types";
 
 @Injectable()
 export class StoryService implements IStoryService {
@@ -54,7 +56,7 @@ export class StoryService implements IStoryService {
     }
 
     story.segments.forEach((segment) => {
-      if (segment.isGenerating) {
+      if (segment.status === "pending") {
         throw new StoryError(StoryErrorType.NotCompleted);
       }
     });
@@ -88,5 +90,79 @@ export class StoryService implements IStoryService {
   async getStory(userId: string, storyId: string): Promise<IStory> {
     const story = await this.repo.story().userHasAccess(storyId, userId);
     return story;
+  }
+
+  async getSegments(userId: string, storyId: string): Promise<ISegment[]> {
+    await this.repo.story().userHasAccess(storyId, userId);
+    const story = await this.repo.story().findWithSegments(storyId);
+    if (!story) {
+      throw new StoryError(StoryErrorType.NotFound, "Story not found");
+    }
+
+    return story.segments;
+  }
+
+  async pollSegmentStatus(
+    userId: string,
+    storyId: string,
+  ): Promise<PollSegmentsStatusResponse> {
+    await this.repo.story().userHasAccess(storyId, userId);
+
+    const startTime = Date.now();
+    const pollInterval = 1000 * 1;
+    const maxWaitTime = 1000 * 30;
+
+    return new Promise((resolve, reject) => {
+      const checkStatus = async () => {
+        try {
+          const story = await this.repo.story().findWithSegments(storyId);
+          if (!story) {
+            throw new StoryError(StoryErrorType.NotFound, "Story not found");
+          }
+          if (story.segments.length === 0) {
+            if (Date.now() - startTime >= maxWaitTime) {
+              resolve({
+                isCompleted: false,
+                segments: [],
+              });
+              return;
+            }
+
+            // eslint-disable-next-line
+            setTimeout(checkStatus, pollInterval);
+            return;
+          }
+
+          const completedSegments = story.segments.filter(
+            (s) => s.status === "completed",
+          );
+          const isCompleted =
+            completedSegments.length === story.segments.length;
+
+          const response: PollSegmentsStatusResponse = {
+            isCompleted,
+            segments: story.segments,
+          };
+
+          const hasChanges = story.segments.some((s) => s.status !== "pending");
+          if (hasChanges) {
+            resolve(response);
+            return;
+          }
+
+          if (Date.now() - startTime >= pollInterval) {
+            resolve(response);
+            return;
+          }
+
+          // eslint-disable-next-line
+          setTimeout(checkStatus, pollInterval);
+        } catch (error: unknown) {
+          reject(error as Error);
+        }
+      };
+
+      checkStatus();
+    });
   }
 }

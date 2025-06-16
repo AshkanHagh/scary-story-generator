@@ -115,7 +115,7 @@ export class VideoWorker extends WorkerHost {
       });
     } catch (error: unknown) {
       await this.repo.segment().update(payload.segmentId, {
-        isGenerating: false,
+        status: "failed",
         error: error instanceof Error ? error.message : String(error),
       });
     } finally {
