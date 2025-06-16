@@ -9,7 +9,6 @@ import { BullModule } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { IDbConfig } from "./configs/db.config";
 import { WorkerModule } from "./worker/worker.module";
-import { WsModule } from "./ws/ws.module";
 
 @Module({
   imports: [
@@ -32,7 +31,6 @@ import { WsModule } from "./ws/ws.module";
     StoryModule,
     LlmAgentModule,
     WorkerModule,
-    WsModule,
   ],
 })
 export class AppModule {}

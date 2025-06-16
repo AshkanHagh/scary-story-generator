@@ -6,7 +6,6 @@ import { RepositoryModule } from "src/repository/repository.module";
 import { TokenService } from "./services/token.service";
 import { AnonymousJwtStrategy } from "./strategies/anonymous-jwt.strategy";
 import { AnonymousAuthGuard } from "./guards/anonymous-auth.guard";
-import { WsAnonymousAuthGuard } from "./guards/ws-anonymous-auth.guard";
 
 @Module({
   imports: [ConfigModule, RepositoryModule],
@@ -16,8 +15,7 @@ import { WsAnonymousAuthGuard } from "./guards/ws-anonymous-auth.guard";
     TokenService,
     AnonymousJwtStrategy,
     AnonymousAuthGuard,
-    WsAnonymousAuthGuard,
   ],
-  exports: [AnonymousAuthGuard, AnonymousJwtStrategy, WsAnonymousAuthGuard],
+  exports: [AnonymousAuthGuard, AnonymousJwtStrategy],
 })
 export class AuthModule {}
