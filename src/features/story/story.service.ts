@@ -84,4 +84,9 @@ export class StoryService implements IStoryService {
       }),
     ]);
   }
+
+  async getStory(userId: string, storyId: string): Promise<IStory> {
+    const story = await this.repo.story().userHasAccess(storyId, userId);
+    return story;
+  }
 }

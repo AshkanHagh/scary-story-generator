@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
+  HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
-  Res,
   UseGuards,
 } from "@nestjs/common";
 import { IStoryController } from "./interfaces/controller";
@@ -13,7 +15,6 @@ import { StoryService } from "./story.service";
 import { User } from "../auth/decorators/user.decorator";
 import { ZodValidationPipe } from "src/utils/zod.validation";
 import { AnonymousAuthGuard } from "../auth/guards/anonymous-auth.guard";
-import { Response } from "express";
 import { IStory } from "src/drizzle/schema";
 
 @Controller("story")
@@ -31,23 +32,30 @@ export class StoryController implements IStoryController {
   }
 
   @Post("/segment/:story_id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async generateSegment(
     @User("id") userId: string,
-    @Param("story_id") storyId: string,
-    @Res() res: Response,
-  ): Promise<Response> {
+    @Param("story_id", new ParseUUIDPipe()) storyId: string,
+  ): Promise<void> {
     await this.storyService.generateSegment(userId, storyId);
-    return res.status(HttpStatus.NO_CONTENT).json();
+    return;
   }
 
   @Post("/video/:story_id")
+  @HttpCode(HttpStatus.NO_CONTENT)
   async generateVideo(
     @User("id") userId: string,
-    @Param("story_id") storyId: string,
-    @Res() res: Response,
-  ): Promise<Response> {
+    @Param("story_id", new ParseUUIDPipe()) storyId: string,
+  ): Promise<void> {
     await this.storyService.generateVideo(userId, storyId);
+    return;
+  }
 
-    return res.status(HttpStatus.NO_CONTENT).json();
+  @Get("/:story_id")
+  async getStory(
+    @User("id") userId: string,
+    @Param("story_id", new ParseUUIDPipe()) storyId: string,
+  ): Promise<IStory> {
+    return this.storyService.getStory(userId, storyId);
   }
 }

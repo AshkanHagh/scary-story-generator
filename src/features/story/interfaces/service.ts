@@ -6,6 +6,7 @@ export interface IStoryService {
   createStory(userId: string, payload: CreateStoryDto): Promise<IStory>;
   generateSegment(userId: string, storyId: string): Promise<void>;
   generateVideo(userId: string, storyId: string): Promise<void>;
+  getStory(userId: string, storyId: string): Promise<IStory>;
 }
 
 export interface IS3Service {
