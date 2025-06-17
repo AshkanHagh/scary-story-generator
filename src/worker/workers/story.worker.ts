@@ -10,16 +10,16 @@ import {
 } from "../types";
 import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
-import { StoryProcessingService } from "src/features/story/services/story-processing.service";
 import { StoryError, StoryErrorType } from "src/filter/exception";
+import { SegmentUtilService } from "src/features/segment/util.service";
 
 @Processor(WorkerEvents.Story, { concurrency: 4 })
 export class StoryWorker extends WorkerHost {
   constructor(
     private storyAgent: StoryAgentService,
     private repo: RepositoryService,
-    private service: StoryProcessingService,
     private s3: S3Service,
+    private segmentUtilService: SegmentUtilService,
   ) {
     super();
   }
@@ -65,7 +65,7 @@ export class StoryWorker extends WorkerHost {
 
     const segments = payload.script.split(/\n{2,}/);
     for (let i = 0; i < segments.length; i++) {
-      await this.service.createSegmentWithImage(
+      await this.segmentUtilService.createSegmentWithImage(
         payload.userId,
         payload.storyId,
         segments[i],
@@ -83,7 +83,7 @@ export class StoryWorker extends WorkerHost {
       payload.segment,
     );
 
-    await this.service.generateSegmentImage(
+    await this.segmentUtilService.generateSegmentImage(
       payload.storyId,
       payload.segmentId,
       prompt,

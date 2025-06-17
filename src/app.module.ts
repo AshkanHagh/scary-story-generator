@@ -9,6 +9,8 @@ import { BullModule } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { IDbConfig } from "./configs/db.config";
 import { WorkerModule } from "./worker/worker.module";
+import { SegmentModule } from "./features/segment/segment.module";
+import { VideoModule } from "./features/video/video.module";
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { WorkerModule } from "./worker/worker.module";
     StoryModule,
     LlmAgentModule,
     WorkerModule,
+    SegmentModule,
+    VideoModule,
   ],
 })
 export class AppModule {}

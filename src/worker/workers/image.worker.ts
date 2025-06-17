@@ -12,7 +12,7 @@ import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import * as fs from "fs/promises";
-import { StoryProcessingService } from "src/features/story/services/story-processing.service";
+import { VideoUtilService } from "src/features/video/util.service";
 
 @Processor(WorkerEvents.Image, { concurrency: 4 })
 export class ImageWorker extends WorkerHost {
@@ -20,7 +20,7 @@ export class ImageWorker extends WorkerHost {
     private repo: RepositoryService,
     private imageAgent: ImageAgentService,
     private s3: S3Service,
-    private service: StoryProcessingService,
+    private videoUtilService: VideoUtilService,
   ) {
     super();
   }
@@ -45,7 +45,7 @@ export class ImageWorker extends WorkerHost {
           );
 
           try {
-            await this.service.generateSegmentVideoFrame(
+            await this.videoUtilService.generateSegmentVideoFrame(
               payload.videoId,
               payload.segment,
               imagePath,

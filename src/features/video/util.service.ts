@@ -1,49 +1,39 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
-import { RepositoryService } from "src/repository/repository.service";
 import { InjectQueue } from "@nestjs/bullmq";
-import {
-  ImageJobNames,
-  StoryJobNames,
-  VideoJobNames,
-  WorkerEvents,
-} from "src/worker/event";
+import { Injectable, OnModuleDestroy } from "@nestjs/common";
 import { Queue } from "bullmq";
+import Piscina from "piscina";
+import { RepositoryService } from "src/repository/repository.service";
+import { VideoJobNames, WorkerEvents } from "src/worker/event";
+import { StoryAgentService } from "../llm-agent/services/story-agent.service";
+import { S3Service } from "../story/services/s3.service";
+import * as path from "path";
+import { cpus } from "os";
 import {
   CombineSegmentVideosJobData,
   GenerateImageFrameJobData,
-  GenerateSegmentImageJobData,
   GenerateSegmentVideoJobData,
-  GenerateSegmentVoiceJobData,
-  RegenrateSegmentImageJobData,
   TempFilePaths,
 } from "src/worker/types";
+import * as fs from "fs/promises";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { ISegment } from "src/drizzle/schema";
-import { StoryAgentService } from "../../llm-agent/services/story-agent.service";
-import * as fs from "fs/promises";
-import * as path from "path";
-import { generateSRTFile } from "../utils";
-import { IStoryProcessingService } from "../interfaces/service";
-import { S3Service } from "./s3.service";
-import Piscina from "piscina";
-import { cpus } from "os";
+import { generateSRTFile } from "src/utils/srt-file";
 
 @Injectable()
-export class StoryProcessingService
-  implements IStoryProcessingService, OnModuleDestroy
-{
+export class VideoUtilService implements OnModuleDestroy {
   private piscina: Piscina;
 
   constructor(
-    @InjectQueue(WorkerEvents.Story) private storyQueue: Queue,
-    @InjectQueue(WorkerEvents.Image) private imageQueue: Queue,
     @InjectQueue(WorkerEvents.Video) private videoQueue: Queue,
     private repo: RepositoryService,
     private storyAgent: StoryAgentService,
     private s3: S3Service,
   ) {
+    const workerPath = path.join(__dirname, "workers");
+    const filePath = path.join(workerPath, "frame-worker.js");
+
     this.piscina = new Piscina({
-      filename: path.join(__dirname, "frame-worker.js"),
+      filename: filePath,
       maxThreads: cpus().length,
       minThreads: 1,
     });
@@ -51,54 +41,6 @@ export class StoryProcessingService
 
   async onModuleDestroy() {
     await this.piscina.destroy();
-  }
-
-  async createSegmentWithImage(
-    // Userid for consuming token from user tokens
-    userId: string,
-    storyId: string,
-    text: string,
-    order: number,
-    context: string,
-  ): Promise<void> {
-    const segment = await this.repo.segment().insert({
-      storyId,
-      text,
-      order,
-      status: "pending",
-    });
-
-    await Promise.all([
-      this.storyQueue.add(StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE, {
-        storyId,
-        segmentId: segment.id,
-        context,
-        segment: text,
-      } as GenerateSegmentImageJobData),
-
-      this.storyQueue.add(StoryJobNames.GENERATE_SEGMENT_VOICE, {
-        segment: text,
-        segmentId: segment.id,
-      } as GenerateSegmentVoiceJobData),
-    ]);
-  }
-
-  async generateSegmentImage(
-    storyId: string,
-    segmentId: string,
-    segment: string,
-  ): Promise<void> {
-    const story = await this.repo.story().find(storyId);
-    // NOTE: always exists
-    if (!story) {
-      throw new StoryError(StoryErrorType.FailedToGenerateStory);
-    }
-
-    const jobData: RegenrateSegmentImageJobData = {
-      prompt: segment,
-      segmentId: segmentId,
-    };
-    await this.imageQueue.add(ImageJobNames.GENERATE_IMAGE, jobData);
   }
 
   async generateSegmentVideoFrame(

@@ -2,8 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -15,10 +13,9 @@ import { StoryService } from "./story.service";
 import { User } from "../auth/decorators/user.decorator";
 import { ZodValidationPipe } from "src/utils/zod.validation";
 import { AnonymousAuthGuard } from "../auth/guards/anonymous-auth.guard";
-import { ISegment, IStory, IVideoRecord } from "src/drizzle/schema";
-import { PollSegmentsStatusResponse } from "./types";
+import { IStory } from "src/drizzle/schema";
 
-@Controller("story")
+@Controller("stories")
 @UseGuards(AnonymousAuthGuard)
 export class StoryController implements IStoryController {
   constructor(private storyService: StoryService) {}
@@ -30,50 +27,6 @@ export class StoryController implements IStoryController {
   ): Promise<IStory> {
     const story = await this.storyService.createStory(userId, payload);
     return story;
-  }
-
-  @Post("/segment/:story_id")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async generateSegment(
-    @User("id") userId: string,
-    @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<void> {
-    await this.storyService.generateSegment(userId, storyId);
-    return;
-  }
-
-  @Get("/segment/:story_id")
-  async getSegments(
-    @User("id") userId: string,
-    @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<ISegment[]> {
-    return this.storyService.getSegments(userId, storyId);
-  }
-
-  @Get("/segment/:story_id/poll")
-  async pollSegmentStatus(
-    @User("id") userId: string,
-    @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<PollSegmentsStatusResponse> {
-    return this.storyService.pollSegmentStatus(userId, storyId);
-  }
-
-  @Post("/video/:story_id")
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async generateVideo(
-    @User("id") userId: string,
-    @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<void> {
-    await this.storyService.generateVideo(userId, storyId);
-    return;
-  }
-
-  @Get("/video/:story_id/poll")
-  async pollStoryVideoStatus(
-    @User("id") userId: string,
-    @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<IVideoRecord> {
-    return this.storyService.pollStoryVideoStatus(userId, storyId);
   }
 
   @Get("/:story_id")
