@@ -24,11 +24,11 @@ export class VideoRepository implements IVideoRepository {
     await this.db.update(VideoTable).set(form).where(eq(VideoTable.id, id));
   }
 
-  async findByStoryId(storyId: string): Promise<IVideo> {
+  async find(id: string): Promise<IVideo> {
     const [video] = await this.db
       .select()
       .from(VideoTable)
-      .where(eq(VideoTable.storyId, storyId));
+      .where(eq(VideoTable.id, id));
 
     if (!video) {
       throw new StoryError(StoryErrorType.NotFound);

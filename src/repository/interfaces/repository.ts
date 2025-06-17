@@ -49,6 +49,6 @@ export interface IVideoRepository {
   insert(form: IVideoInsertForm): Promise<IVideo>;
   update(id: string, form: IVideoUpdateForm): Promise<void>;
   userHasAccess(id: string, userId: string): Promise<void>;
-  findByStoryId(storyId: string): Promise<IVideo>;
+  find(id: string): Promise<IVideo>;
   findAllByUserId(userId: string): Promise<IVideo[]>;
 }

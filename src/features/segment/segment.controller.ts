@@ -30,7 +30,7 @@ export class SegmentController implements ISegmentController {
     return;
   }
 
-  @Get("/:story_id/segments")
+  @Get("/")
   async getSegments(
     @User("id") userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
@@ -38,7 +38,7 @@ export class SegmentController implements ISegmentController {
     return this.segmentService.getSegments(userId, storyId);
   }
 
-  @Get("/:story_id/segments/status")
+  @Get("/status")
   async pollSegmentStatus(
     @User("id") userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,

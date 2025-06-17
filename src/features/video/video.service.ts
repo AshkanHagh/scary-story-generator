@@ -16,7 +16,7 @@ export class VideoService implements IVideoService {
     private repo: RepositoryService,
   ) {}
 
-  async generateVideo(userId: string, storyId: string): Promise<void> {
+  async generateVideo(userId: string, storyId: string): Promise<string> {
     const story = await this.repo.story().findWithSegments(storyId);
     if (!story) {
       throw new StoryError(StoryErrorType.NotFound);
@@ -56,17 +56,21 @@ export class VideoService implements IVideoService {
         );
       }),
     ]);
+
+    return video.id;
   }
 
   async pollStoryVideoStatus(
     userId: string,
-    storyId: string,
+    videoId: string,
   ): Promise<IVideoRecord> {
     const pollInterval = 1000 * 1;
 
     const fetchFn = async () => {
-      const video = await this.repo.video().findByStoryId(storyId);
-      await this.repo.video().userHasAccess(video.id, userId);
+      const video = await this.repo.video().find(videoId);
+      if (video.userId !== userId) {
+        throw new StoryError(StoryErrorType.HasNoPermission);
+      }
 
       const videoRecord: IVideoRecord = {
         id: video.id,
