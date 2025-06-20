@@ -8,7 +8,7 @@ import { AnonymousJwtStrategy } from "./strategies/anonymous-jwt.strategy";
 import { AnonymousAuthGuard } from "./guards/anonymous-auth.guard";
 
 @Module({
-  imports: [ConfigModule, RepositoryModule],
+  imports: [RepositoryModule],
   controllers: [AuthController],
   providers: [
     AuthService,
