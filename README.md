@@ -4,7 +4,7 @@ A web application that transforms user-written scary stories into AI-generated v
 
 ## Introduction
 
-The Scary Story Generator is a full-stack web application that enables users to input a scary story script and generate a video with AI-generated visuals, voice narration, and subtitles. Built with a queue-driven architecture, it leverages AI services like OpenAI and Replicate to create engaging multimedia content, showcasing advanced backend processing and scalable design.
+The Scary Story Generator is a backend REST API that transforms user-submitted scary story scripts into AI-generated videos with visuals, voiceovers, and subtitles. Powered by NestJS, TypeScript, and BullMQ, it leverages OpenAI, Replicate, and AWS S3 with a queue-driven architecture for scalable, efficient processing.
 
 ## Key Features
 
