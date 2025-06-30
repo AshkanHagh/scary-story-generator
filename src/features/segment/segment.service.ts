@@ -34,7 +34,7 @@ export class SegmentService implements ISegmentService {
     await this.repo.story().userHasAccess(storyId, userId);
     const story = await this.repo.story().findWithSegments(storyId);
     if (!story) {
-      throw new StoryError(StoryErrorType.NotFound, "Story not found");
+      throw new StoryError(StoryErrorType.NotFound);
     }
 
     return story.segments;
