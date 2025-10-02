@@ -2,13 +2,14 @@
 /dist
 node_modules/
 /build
+/.next/
+/out/
 
 # Logs
 logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
-pnpm-lock.yaml*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
@@ -46,6 +47,7 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
+tmp/
 
 # Runtime data
 pids
@@ -57,6 +59,10 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 migrations/
-package-lock.json*
 
-tmp/
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
