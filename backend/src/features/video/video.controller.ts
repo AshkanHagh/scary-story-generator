@@ -23,7 +23,6 @@ export class VideoController implements IVideoController {
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
   ): Promise<{ id: string }> {
     const videoId = await this.videoService.generateVideo(userId, storyId);
-    console.log(videoId);
     return { id: videoId };
   }
 

@@ -1,12 +1,18 @@
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
-const fs = require("fs").promises;
-const path = require("path");
+import { createCanvas, loadImage } from "@napi-rs/canvas";
+import fs from "fs/promises";
+import path from "node:path";
 
-module.exports = async function generateImageFrame({
+type GenerateImageFrameOptions = {
+  frameIndex: number;
+  imagePath: string;
+  outputDir: string;
+};
+
+export default async function generateImageFrame({
   frameIndex,
   imagePath,
   outputDir,
-}) {
+}: GenerateImageFrameOptions) {
   const canvasWidth = 1920;
   const canvasHeight = 1080;
   const zoomStep = 0.0003;
@@ -21,7 +27,7 @@ module.exports = async function generateImageFrame({
   const zoom = 1 + zoomStep * frameIndex;
   const imgAspect = image.width / image.height;
   const canvasAspect = canvasWidth / canvasHeight;
-  let drawWidth, drawHeight;
+  let drawWidth: number, drawHeight: number;
 
   if (imgAspect > canvasAspect) {
     drawWidth = canvasWidth * zoom;
@@ -48,4 +54,4 @@ module.exports = async function generateImageFrame({
   await fs.writeFile(framePath, buffer);
 
   return { success: true, frameIndex };
-};
+}

@@ -36,7 +36,6 @@ export class VideoUtilService implements OnModuleDestroy {
     this.piscina = new Piscina({
       filename: filePath,
       maxThreads: cpus().length,
-      minThreads: 1,
     });
   }
 
