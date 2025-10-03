@@ -1,8 +1,6 @@
 import {
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseUUIDPipe,
   Post,
@@ -20,12 +18,12 @@ export class VideoController implements IVideoController {
   constructor(private videoService: VideoService) {}
 
   @Post("/:story_id")
-  @HttpCode(HttpStatus.NO_CONTENT)
   async generateVideo(
     @User("id") userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
   ): Promise<{ id: string }> {
     const videoId = await this.videoService.generateVideo(userId, storyId);
+    console.log(videoId);
     return { id: videoId };
   }
 

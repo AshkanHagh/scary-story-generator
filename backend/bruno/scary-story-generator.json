@@ -97,7 +97,7 @@
             "auth": {
               "mode": "bearer",
               "bearer": {
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                "token": "{{AUTH_TOKEN}}"
               }
             }
           }
@@ -112,7 +112,7 @@
           },
           "tags": [],
           "request": {
-            "url": "http://localhost:7319/api/v1/stories/64f37158-12ed-45a9-ad93-3f1d5eda9108",
+            "url": "http://localhost:7319/api/v1/stories/{{STORY_ID}}",
             "method": "GET",
             "headers": [],
             "params": [],
@@ -130,7 +130,7 @@
             "auth": {
               "mode": "bearer",
               "bearer": {
-                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                "token": "{{AUTH_TOKEN}}"
               }
             }
           }
@@ -162,7 +162,7 @@
               },
               "tags": [],
               "request": {
-                "url": "http://localhost:7319/api/v1/stories/ea599ac8-bbb3-42be-aa70-76a30d75fbb9/segments",
+                "url": "http://localhost:7319/api/v1/segments/{{STORY_ID}}",
                 "method": "GET",
                 "headers": [],
                 "params": [],
@@ -180,7 +180,7 @@
                 "auth": {
                   "mode": "bearer",
                   "bearer": {
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MzQ2ZjBiNS02Zjk3LTQ1NGQtYTVkNC1iZTU2MDdmMmJiODIiLCJpYXQiOjE3NTAxNTUzNDksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1MDE5ODU0OX0.1tTLTHzc2K9DiZ1w2CCPQoPX1YY5ykMiCzl-5W9AdYg"
+                    "token": "{{AUTH_TOKEN}}"
                   }
                 }
               }
@@ -195,7 +195,7 @@
               },
               "tags": [],
               "request": {
-                "url": "http://localhost:7319/api/v1/stories/ea599ac8-bbb3-42be-aa70-76a30d75fbb9/segments/status",
+                "url": "http://localhost:7319/api/v1/segments/{{STORY_ID}}/status",
                 "method": "GET",
                 "headers": [],
                 "params": [],
@@ -213,7 +213,7 @@
                 "auth": {
                   "mode": "bearer",
                   "bearer": {
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                    "token": "{{AUTH_TOKEN}}"
                   }
                 }
               }
@@ -228,7 +228,7 @@
               },
               "tags": [],
               "request": {
-                "url": "http://localhost:7319/api/v1/segments/ea599ac8-bbb3-42be-aa70-76a30d75fbb9",
+                "url": "http://localhost:7319/api/v1/segments/{{STORY_ID}}",
                 "method": "POST",
                 "headers": [],
                 "params": [],
@@ -246,7 +246,7 @@
                 "auth": {
                   "mode": "bearer",
                   "bearer": {
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                    "token": "{{AUTH_TOKEN}}"
                   }
                 }
               }
@@ -280,7 +280,7 @@
               },
               "tags": [],
               "request": {
-                "url": "http://localhost:7319/api/v1/stories/videos/ea599ac8-bbb3-42be-aa70-76a30d75fbb9",
+                "url": "http://localhost:7319/api/v1/videos/{{STORY_ID}}",
                 "method": "POST",
                 "headers": [],
                 "params": [],
@@ -298,7 +298,7 @@
                 "auth": {
                   "mode": "bearer",
                   "bearer": {
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                    "token": "{{AUTH_TOKEN}}"
                   }
                 }
               }
@@ -313,7 +313,7 @@
               },
               "tags": [],
               "request": {
-                "url": "http://localhost:7319/api/v1/stories/videos/e4b67344-c792-43c5-bcc5-68527b5079dc/status",
+                "url": "http://localhost:7319/api/v1/videos/783f2bcc-e76b-4b72-933a-fb45724e6beb/status",
                 "method": "GET",
                 "headers": [],
                 "params": [],
@@ -331,7 +331,7 @@
                 "auth": {
                   "mode": "bearer",
                   "bearer": {
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                    "token": "{{AUTH_TOKEN}}"
                   }
                 }
               }
@@ -364,7 +364,7 @@
                 "auth": {
                   "mode": "bearer",
                   "bearer": {
-                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                    "token": "{{AUTH_TOKEN}}"
                   }
                 }
               }
@@ -374,13 +374,35 @@
       ]
     }
   ],
-  "environments": [],
+  "activeEnvironmentUid": "QpKPUpxca9gNrlH32rLSD",
+  "environments": [
+    {
+      "variables": [
+        {
+          "name": "AUTH_TOKEN",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWVhYWM1Mi02NTYyLTQ4YzAtYTJkMy00YmRlZTZiYzNhNTQiLCJpYXQiOjE3NTk0OTAxMDIsImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUzMzMwMn0.4K1D06r64L0oWEtb91L9_-lQEtkRFMUNpBmjkjI2o7k",
+          "enabled": true,
+          "secret": false,
+          "type": "text"
+        },
+        {
+          "name": "STORY_ID",
+          "value": "ee17cdf2-258b-4af8-9b4b-c73dc1732e2e",
+          "enabled": true,
+          "secret": false,
+          "type": "text"
+        }
+      ],
+      "name": "scary-story-generator"
+    }
+  ],
   "root": {
     "request": {
       "auth": {
         "mode": "none"
       }
     },
+    "docs": "/anonymous response:\n```bash\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWVhYWM1Mi02NTYyLTQ4YzAtYTJkMy00YmRlZTZiYzNhNTQiLCJpYXQiOjE3NTk0OTAxMDIsImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUzMzMwMn0.4K1D06r64L0oWEtb91L9_-lQEtkRFMUNpBmjkjI2o7k\"\n}\n```\n\nPOST /stories response:\nGET /stories/:story_id\n```bash\n{\n  \"id\": \"f427bce8-4682-4917-99b6-12541eff859d\",\n  \"userId\": \"41eaac52-6562-48c0-a2d3-4bdee6bc3a54\",\n  \"title\": \"The Whispers Behind the Walls\",\n  \"script\": \"Ethan had always felt uneasy in his new apartment.\\nThere was something about\",\n  \"context\": null,\n  \"createdAt\": \"2025-10-03T11:17:37.903Z\",\n  \"updatedAt\": \"2025-10-03T11:17:37.903Z\"\n}\n```\n\nPOST /segments/:story_id response: NONE\n\nGET /segments/:story_id/status response: \n```bash\n{\n  \"isCompleted\": true,\n  \"segments\": [\n    {\n      \"id\": \"0012c7fc-0ea9-41d9-b205-5f669d7a8d90\",\n      \"storyId\": \"f427bce8-4682-4917-99b6-12541eff859d\",\n      \"order\": 6,\n      \"text\": \"One night, driven to the edge, Ethan decided to confront whatever haunted him.\\nHe stood before the closet, the source of the loudest whispers.\\nThe door creaked as he opened it, revealing darkness deeper than night.\\nHe stepped inside.\",\n      \"prompt\": \"A translucent, ghostly figure of a woman in a tattered white dress, floating in a dimly lit hallway with peeling wallpaper, illuminated by a flickering chandelier. The mood is haunting and melancholic, with cold blue lighting and faint mist swirling around her feet.\",\n      \"imageId\": \"b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n      \"voiceId\": \"6952ec03-8322-459f-aa44-2261c2f60328\",\n      \"videoId\": null,\n      \"imageUrl\": \"http://localhost:9000/scary-story-generator/b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n      \"status\": \"completed\",\n      \"error\": null,\n      \"createdAt\": \"2025-10-03T11:19:12.742Z\",\n      \"updatedAt\": \"2025-10-03T11:19:14.600Z\"\n    }\n  ]\n}\n```\n\nGET /segments/:story_id response:\n```bash\n[\n  {\n    \"id\": \"0012c7fc-0ea9-41d9-b205-5f669d7a8d90\",\n    \"storyId\": \"f427bce8-4682-4917-99b6-12541eff859d\",\n    \"order\": 6,\n    \"text\": \"One night, driven to the edge, Ethan decided to confront whatever haunted him.\\nHe stood before the closet, the source of the loudest whispers.\\nThe door creaked as he opened it, revealing darkness deeper than night.\\nHe stepped inside.\",\n    \"prompt\": \"A translucent, ghostly figure of a woman in a tattered white dress, floating in a dimly lit hallway with peeling wallpaper, illuminated by a flickering chandelier. The mood is haunting and melancholic, with cold blue lighting and faint mist swirling around her feet.\",\n    \"imageId\": \"b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n    \"voiceId\": \"6952ec03-8322-459f-aa44-2261c2f60328\",\n    \"videoId\": null,\n    \"imageUrl\": \"http://localhost:9000/scary-story-generator/b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n    \"status\": \"completed\",\n    \"error\": null,\n    \"createdAt\": \"2025-10-03T11:19:12.742Z\",\n    \"updatedAt\": \"2025-10-03T11:19:14.600Z\"\n  },\n]\n```\n\nGET /videos response:\n```bash\n[\n  {\n    \"id\": \"3d8f3e92-0758-4ec4-a65d-20205200fce8\",\n    \"status\": \"completed\",\n    \"url\": \"http://localhost:9000/scary-story-generator/3d8f3e92-0758-4ec4-a65d-20205200fce8\",\n    \"createdAt\": \"2025-10-03T09:43:33.879Z\",\n    \"storyId\": \"ea599ac8-bbb3-42be-aa70-76a30d75fbb9\",\n    \"userId\": \"cc3bfb13-37f4-4b45-8710-dfc5eaffe337\"\n  }\n]\n```\n\nPOST /videos/:story_id response\n```bash\n{\n  \"id\": \"783f2bcc-e76b-4b72-933a-fb45724e6beb\"\n}\n```\n\nGET /videos/:video_id/status response:\n```bash\n{\n  \"id\": \"783f2bcc-e76b-4b72-933a-fb45724e6beb\",\n  \"status\": \"completed\",\n  \"url\": \"http://localhost:9000/scary-story-generator/783f2bcc-e76b-4b72-933a-fb45724e6beb\",\n  \"createdAt\": \"2025-10-03T11:27:04.967Z\",\n  \"storyId\": \"ee17cdf2-258b-4af8-9b4b-c73dc1732e2e\",\n  \"userId\": \"41eaac52-6562-48c0-a2d3-4bdee6bc3a54\"\n}\n```",
     "meta": {
       "name": "scary-story-generator"
     }
