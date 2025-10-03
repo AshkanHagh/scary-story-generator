@@ -13,6 +13,7 @@ export const aiConfig = registerAs("ai", () => {
     replicate: {
       secret: process.env.REPLICATE_API_TOKEN!,
     },
+    useMock: process.env.USE_MOCK === "true",
   };
 });
 

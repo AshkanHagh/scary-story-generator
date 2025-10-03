@@ -1,0 +1,399 @@
+{
+  "name": "scary-story-generator",
+  "version": "1",
+  "items": [
+    {
+      "type": "folder",
+      "name": "auth",
+      "filename": "auth",
+      "seq": 1,
+      "root": {
+        "request": {
+          "auth": {
+            "mode": "inherit"
+          }
+        },
+        "meta": {
+          "name": "auth",
+          "seq": 1
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "/anonymous",
+          "filename": "anonymous.bru",
+          "seq": 1,
+          "settings": {
+            "encodeUrl": true
+          },
+          "tags": [],
+          "request": {
+            "url": "http://localhost:7319/api/v1/auth/anonymous",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "inherit"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "folder",
+      "name": "story",
+      "filename": "story",
+      "seq": 3,
+      "root": {
+        "request": {
+          "auth": {
+            "mode": "inherit"
+          }
+        },
+        "meta": {
+          "name": "story",
+          "seq": 3
+        }
+      },
+      "items": [
+        {
+          "type": "http",
+          "name": "/",
+          "filename": ".bru",
+          "seq": 1,
+          "settings": {
+            "encodeUrl": true
+          },
+          "tags": [],
+          "request": {
+            "url": "http://localhost:7319/api/v1/stories/",
+            "method": "POST",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "json",
+              "json": "{\n    \"title\": \"The Whispers Behind the Walls\",\n    \"script\": \"Ethan had always felt uneasy in his new apartment.\\nThere was something about the walls—the way they seemed to hum at night, as if the building itself was trying to speak to him.\\nAt first, he blamed the old pipes or the neighbors he’d never met.\\nBut as the nights dragged on, the humming grew louder.\\nAnd it wasn’t just humming anymore.\\n\\nIt started on a rainy Thursday night.\\nThe wind rattled the cracked windowpane, and the streetlights flickered like dying stars.\\nEthan sat alone, his eyes heavy with sleep, the TV casting pale blue light across the room.\\nThat’s when he heard it.\\nA soft voice, almost a sigh, drifting through the wall behind his bed.\\n“Why did you come here?” it whispered.\\n\\nEthan froze.\\nHe muted the TV and strained to listen.\\nNothing but the patter of rain.\\nHe shook his head and laughed nervously.\\nJust my imagination, he thought.\\nBut the voice came again, clearer this time.\\n“Leave... before it’s too late.”\\n\\nThe next morning, Ethan convinced himself it had been a dream.\\nHe went to work, tried to ignore the bags under his eyes, the way his hands trembled when he held his coffee.\\nBut that night, as he lay in bed, the whispers returned.\\nThey came from the walls, the floor, even the ceiling.\\nAnd they weren’t alone.\\n\\nScratching.\\nLike fingernails dragging against wood.\\nSoft at first, then desperate.\\nEthan leapt from bed, his heart pounding in his chest.\\nHe grabbed a flashlight and shone it around the room.\\nNothing.\\nBut the sounds didn’t stop.\\nThey followed him wherever he went.\\n\\nDays turned into sleepless nights.\\nEthan stopped going to work.\\nHe spent his time pacing, listening, waiting for the next voice, the next scratch.\\nHe tore at the wallpaper, searching for hidden speakers, for anything that could explain what was happening.\\nAll he found was rot and decay.\\n\\nOne night, driven to the edge, Ethan decided to confront whatever haunted him.\\nHe stood before the closet, the source of the loudest whispers.\\nThe door creaked as he opened it, revealing darkness deeper than night.\\nHe stepped inside.\\n\\nThe door slammed shut behind him.\\nHe fumbled for his flashlight, but it slipped from his shaking hands.\\nThe whispers surrounded him, louder than ever.\\nHe covered his ears, but they echoed in his mind.\\n\\n“You can’t escape.”\\n“You shouldn’t have come.”\\n“Now you’re one of us.”\\n\\nThe air grew colder, the darkness thicker.\\nEthan felt the walls closing in.\\nHe pounded on the door, screaming for help.\\nBut no one came.\\nThe last thing he heard before the darkness swallowed him was a soft, hollow laughter.\\n\\nDays later, the landlord opened the apartment to show it to a new tenant.\\nThe rooms were empty.\\nNo sign of Ethan.\\nJust the faint sound of whispers, and the hum of the walls.\\n\"\n}",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+              }
+            }
+          }
+        },
+        {
+          "type": "http",
+          "name": "/:story_id",
+          "filename": "story_id.bru",
+          "seq": 2,
+          "settings": {
+            "encodeUrl": true
+          },
+          "tags": [],
+          "request": {
+            "url": "http://localhost:7319/api/v1/stories/64f37158-12ed-45a9-ad93-3f1d5eda9108",
+            "method": "GET",
+            "headers": [],
+            "params": [],
+            "body": {
+              "mode": "none",
+              "formUrlEncoded": [],
+              "multipartForm": [],
+              "file": []
+            },
+            "script": {},
+            "vars": {},
+            "assertions": [],
+            "tests": "",
+            "docs": "",
+            "auth": {
+              "mode": "bearer",
+              "bearer": {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+              }
+            }
+          }
+        },
+        {
+          "type": "folder",
+          "name": "segments",
+          "filename": "segments",
+          "seq": 4,
+          "root": {
+            "request": {
+              "auth": {
+                "mode": "inherit"
+              }
+            },
+            "meta": {
+              "name": "segments",
+              "seq": 4
+            }
+          },
+          "items": [
+            {
+              "type": "http",
+              "name": "GET /segments/:story_id",
+              "filename": "GET -segments--story_id.bru",
+              "seq": 3,
+              "settings": {
+                "encodeUrl": true
+              },
+              "tags": [],
+              "request": {
+                "url": "http://localhost:7319/api/v1/stories/ea599ac8-bbb3-42be-aa70-76a30d75fbb9/segments",
+                "method": "GET",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1MzQ2ZjBiNS02Zjk3LTQ1NGQtYTVkNC1iZTU2MDdmMmJiODIiLCJpYXQiOjE3NTAxNTUzNDksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1MDE5ODU0OX0.1tTLTHzc2K9DiZ1w2CCPQoPX1YY5ykMiCzl-5W9AdYg"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "/segments/:story_id/status",
+              "filename": "segments--story_id-status.bru",
+              "seq": 2,
+              "settings": {
+                "encodeUrl": true
+              },
+              "tags": [],
+              "request": {
+                "url": "http://localhost:7319/api/v1/stories/ea599ac8-bbb3-42be-aa70-76a30d75fbb9/segments/status",
+                "method": "GET",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "/segments/:story_id",
+              "filename": "segments--story_id.bru",
+              "seq": 1,
+              "settings": {
+                "encodeUrl": true
+              },
+              "tags": [],
+              "request": {
+                "url": "http://localhost:7319/api/v1/segments/ea599ac8-bbb3-42be-aa70-76a30d75fbb9",
+                "method": "POST",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "folder",
+          "name": "videos",
+          "filename": "videos",
+          "seq": 3,
+          "root": {
+            "request": {
+              "auth": {
+                "mode": "inherit"
+              }
+            },
+            "meta": {
+              "name": "videos",
+              "seq": 3
+            }
+          },
+          "items": [
+            {
+              "type": "http",
+              "name": "/videos/:story_id",
+              "filename": "videos--story_id.bru",
+              "seq": 4,
+              "settings": {
+                "encodeUrl": true
+              },
+              "tags": [],
+              "request": {
+                "url": "http://localhost:7319/api/v1/stories/videos/ea599ac8-bbb3-42be-aa70-76a30d75fbb9",
+                "method": "POST",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "/videos/:video_id/status",
+              "filename": "videos--video_id-status.bru",
+              "seq": 6,
+              "settings": {
+                "encodeUrl": true
+              },
+              "tags": [],
+              "request": {
+                "url": "http://localhost:7319/api/v1/stories/videos/e4b67344-c792-43c5-bcc5-68527b5079dc/status",
+                "method": "GET",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                  }
+                }
+              }
+            },
+            {
+              "type": "http",
+              "name": "/videos/",
+              "filename": "videos-.bru",
+              "seq": 3,
+              "settings": {
+                "encodeUrl": true
+              },
+              "tags": [],
+              "request": {
+                "url": "http://localhost:7319/api/v1/videos",
+                "method": "GET",
+                "headers": [],
+                "params": [],
+                "body": {
+                  "mode": "none",
+                  "formUrlEncoded": [],
+                  "multipartForm": [],
+                  "file": []
+                },
+                "script": {},
+                "vars": {},
+                "assertions": [],
+                "tests": "",
+                "docs": "",
+                "auth": {
+                  "mode": "bearer",
+                  "bearer": {
+                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjYzNiZmIxMy0zN2Y0LTRiNDUtODcxMC1kZmM1ZWFmZmUzMzciLCJpYXQiOjE3NTk0NzkwNjksImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUyMjI2OX0.BHU-7CkyYoIiKHrMiGmpflSbwrTRIkJKZq_OwgWlgH0"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "environments": [],
+  "root": {
+    "request": {
+      "auth": {
+        "mode": "none"
+      }
+    },
+    "meta": {
+      "name": "scary-story-generator"
+    }
+  },
+  "brunoConfig": {
+    "version": "1",
+    "name": "scary-story-generator",
+    "type": "collection",
+    "ignore": [
+      "node_modules",
+      ".git"
+    ],
+    "size": 0.0035467147827148438,
+    "filesCount": 13
+  }
+}

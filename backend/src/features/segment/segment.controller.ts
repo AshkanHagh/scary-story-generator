@@ -15,12 +15,12 @@ import { User } from "../auth/decorators/user.decorator";
 import { ISegment } from "src/drizzle/schema";
 import { PollSegmentsStatusResponse } from "./types";
 
-@Controller("/stories/:story_id/segments")
+@Controller("segments")
 @UseGuards(AnonymousAuthGuard)
 export class SegmentController implements ISegmentController {
   constructor(private segmentService: SegmentService) {}
 
-  @Post("/")
+  @Post("/:story_id")
   @HttpCode(HttpStatus.NO_CONTENT)
   async generateSegment(
     @User("id") userId: string,
@@ -30,7 +30,7 @@ export class SegmentController implements ISegmentController {
     return;
   }
 
-  @Get("/")
+  @Get("/:story_id")
   async getSegments(
     @User("id") userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
@@ -38,7 +38,7 @@ export class SegmentController implements ISegmentController {
     return this.segmentService.getSegments(userId, storyId);
   }
 
-  @Get("/status")
+  @Get("/:story_id/status")
   async pollSegmentStatus(
     @User("id") userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,

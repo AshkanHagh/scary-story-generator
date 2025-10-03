@@ -87,10 +87,12 @@ export class ImageWorker extends WorkerHost {
           output_quality: 90,
         });
       } else {
+        // randome image from unsplash
         output =
-          "http://localhost:9000/scary-story-generator/thumb-1920-1337024.png";
+          "https://fastly.picsum.photos/id/136/1080/720.jpg?hmac=C8l17RLTHDzR3pYXPzVE1J-guaFGe6_7ifKoVmFuYUY";
       }
 
+      // TODO: required try catch
       const response = await fetch(output);
       const imageBuffer = Buffer.from(await response.arrayBuffer());
 

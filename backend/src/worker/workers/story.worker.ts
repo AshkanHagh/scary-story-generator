@@ -1,7 +1,6 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { StoryJobNames, WorkerEvents } from "../event";
 import { Job } from "bullmq";
-import { StoryAgentService } from "src/features/llm-agent/services/story-agent.service";
 import { RepositoryService } from "src/repository/repository.service";
 import {
   GenerateImageContextJobData,
@@ -12,11 +11,14 @@ import { S3Service } from "src/features/story/services/s3.service";
 import { v4 as uuid } from "uuid";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { SegmentUtilService } from "src/features/segment/util.service";
+import { Inject } from "@nestjs/common";
+import { STORY_AGENT_SERVICE } from "src/features/llm-agent/constants";
+import { IStoryAgentService } from "src/features/llm-agent/interfaces/service";
 
 @Processor(WorkerEvents.Story, { concurrency: 4 })
 export class StoryWorker extends WorkerHost {
   constructor(
-    private storyAgent: StoryAgentService,
+    @Inject(STORY_AGENT_SERVICE) private storyAgent: IStoryAgentService,
     private repo: RepositoryService,
     private s3: S3Service,
     private segmentUtilService: SegmentUtilService,

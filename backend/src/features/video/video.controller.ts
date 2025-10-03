@@ -14,7 +14,7 @@ import { VideoService } from "./video.service";
 import { User } from "../auth/decorators/user.decorator";
 import { IVideoRecord } from "src/drizzle/schema";
 
-@Controller("/stories/videos")
+@Controller("/videos")
 @UseGuards(AnonymousAuthGuard)
 export class VideoController implements IVideoController {
   constructor(private videoService: VideoService) {}
@@ -34,11 +34,12 @@ export class VideoController implements IVideoController {
     @User("id") userId: string,
     @Param("video_id", new ParseUUIDPipe()) storyId: string,
   ): Promise<IVideoRecord> {
-    return this.videoService.pollStoryVideoStatus(userId, storyId);
+    return await this.videoService.pollStoryVideoStatus(userId, storyId);
   }
 
   @Get("/")
-  userVideos(@User("id") userId: string): Promise<IVideoRecord[]> {
-    return this.videoService.userVideos(userId);
+  async userVideos(@User("id") userId: string): Promise<IVideoRecord[]> {
+    console.log(await this.videoService.userVideos(userId));
+    return await this.videoService.userVideos(userId);
   }
 }

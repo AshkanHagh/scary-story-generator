@@ -11,7 +11,7 @@ services:
       - 5432:5432
 
   minio:
-    image: registry.docker.ir/minio/minio:latest
+    image: registry.docker.ir/minio/minio:RELEASE.2025-04-08T15-41-24Z
     ports:
       - "9000:9000" # api
       - "9001:9001" # ui

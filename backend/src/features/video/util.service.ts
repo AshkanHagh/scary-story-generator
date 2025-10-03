@@ -1,10 +1,9 @@
 import { InjectQueue } from "@nestjs/bullmq";
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Inject, Injectable, OnModuleDestroy } from "@nestjs/common";
 import { Queue } from "bullmq";
 import Piscina from "piscina";
 import { RepositoryService } from "src/repository/repository.service";
 import { VideoJobNames, WorkerEvents } from "src/worker/event";
-import { StoryAgentService } from "../llm-agent/services/story-agent.service";
 import { S3Service } from "../story/services/s3.service";
 import * as path from "path";
 import { cpus } from "os";
@@ -18,6 +17,8 @@ import * as fs from "fs/promises";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { ISegment } from "src/drizzle/schema";
 import { generateSRTFile } from "src/utils/srt-file";
+import { STORY_AGENT_SERVICE } from "../llm-agent/constants";
+import { IStoryAgentService } from "../llm-agent/interfaces/service";
 
 @Injectable()
 export class VideoUtilService implements OnModuleDestroy {
@@ -26,7 +27,7 @@ export class VideoUtilService implements OnModuleDestroy {
   constructor(
     @InjectQueue(WorkerEvents.Video) private videoQueue: Queue,
     private repo: RepositoryService,
-    private storyAgent: StoryAgentService,
+    @Inject(STORY_AGENT_SERVICE) private storyAgent: IStoryAgentService,
     private s3: S3Service,
   ) {
     const workerPath = path.join(__dirname, "workers");

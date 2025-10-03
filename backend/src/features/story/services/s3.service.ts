@@ -33,13 +33,11 @@ export class S3Service implements IS3Service {
   }
 
   private async init() {
-    try {
-      const bucketCommand = new HeadBucketCommand({
-        Bucket: this.config.s3.bucketName,
-      });
+    const bucketCommand = new HeadBucketCommand({
+      Bucket: this.config.s3.bucketName,
+    });
 
-      await this.client.send(bucketCommand);
-    } catch (error) {
+    await this.client.send(bucketCommand).catch(async () => {
       try {
         const command = new CreateBucketCommand({
           Bucket: this.config.s3.bucketName,
@@ -49,9 +47,7 @@ export class S3Service implements IS3Service {
       } catch (error: unknown) {
         throw new StoryError(StoryErrorType.S3ReqFailed, error);
       }
-
-      throw new StoryError(StoryErrorType.S3ReqFailed, error);
-    }
+    });
   }
 
   private async initLifecycle() {

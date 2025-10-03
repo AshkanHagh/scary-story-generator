@@ -8,6 +8,10 @@
       {
         "include": "**/*.js",
         "outDir": "./dist/src"
+      },
+      {
+        "include": "datasets/assets/**/*",
+        "outDir": "./dist/src"
       }
     ],
     "watchAssets": true
