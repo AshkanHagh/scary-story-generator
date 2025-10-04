@@ -5,7 +5,7 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react"
-import Button from "@/app/components/ui/button"
+import Button from "@/components/ui/button"
 
 interface VideoPlayerModalProps {
   url: string
