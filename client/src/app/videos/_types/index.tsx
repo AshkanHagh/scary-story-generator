@@ -1,6 +1,8 @@
-export interface Video {
+export type VideoStatus = "completed" | "pending"
+
+export type Video = {
   id: string
-  status: "completed" | "processing" | "failed"
+  status: VideoStatus
   url: string
   createdAt: string
   storyId: string
