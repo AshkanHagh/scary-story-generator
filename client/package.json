@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.23.22",
     "ky": "^1.11.0",
     "lucide-react": "^0.544.0",

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { VideoGrid } from "@/app/videos/_components/video-grid"
-import { motion } from "framer-motion"
 import type { Video } from "@/app/videos/_types"
 import Heading from "./_components/heading"
 
@@ -11,10 +10,8 @@ export default function VideosPage() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate API fetch - replace with actual API call
     const fetchVideos = async () => {
       try {
-        // Mock data for demonstration
         const mockVideos: Video[] = [
           {
             id: "3d8f3e92-0758-4ec4-a65d-20205200fce8",
@@ -42,7 +39,6 @@ export default function VideosPage() {
           }
         ]
 
-        // Simulate network delay
         await new Promise((resolve) => setTimeout(resolve, 1000))
         setVideos(mockVideos)
       } catch (error) {

@@ -1,5 +1,6 @@
 "use client"
 
+import Button from "@/app/components/ui/button"
 import { motion } from "framer-motion"
 import { Bone } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -32,9 +33,11 @@ const AnimatedButton = () => {
           transition: { duration: 1, repeat: Number.POSITIVE_INFINITY }
         }}
       >
-        <button
+        <Button
+          withAnimation={false}
+          size="lg"
           onClick={handleClick}
-          className="bg-primary px-10 py-4 text-xl font-bold text-glow transition-colors hover:bg-primary/90 rounded-lg cursor-pointer flex items-center gap-3 shadow-xl tracking-wider"
+          className="font-bold flex items-center gap-3 shadow-xl tracking-wider"
         >
           <motion.div
             animate={{ rotate: [0, 5, 0] }}
@@ -46,7 +49,7 @@ const AnimatedButton = () => {
             <Bone className="size-6 text-glow" />
           </motion.div>
           <span>Start Free</span>
-        </button>
+        </Button>
       </motion.div>
     </motion.div>
   )

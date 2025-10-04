@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react"
+import Button from "@/app/components/ui/button"
 
 interface VideoPlayerModalProps {
   url: string
@@ -137,18 +138,21 @@ export function VideoPlayerModal({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close Button */}
-            <button
+            <Button
               onClick={onClose}
-              className="absolute cursor-pointer transition-colors right-1 top-1 z-10 size-7 rounded-full bg-background/30 text-foreground shadow-lg hover:bg-muted flex justify-center items-center"
+              className="absolute right-1 top-1 z-10 !rounded-full"
+              variant="ghost"
+              size="icon"
               aria-label="Close video player"
             >
               <X className="size-5" />
-            </button>
+            </Button>
 
             {/* Video Container */}
             <div className="relative overflow-hidden rounded-lg bg-black">
               <video
                 ref={videoRef}
+                onClick={togglePlay}
                 className="aspect-video w-full"
                 onTimeUpdate={handleTimeUpdate}
                 onLoadedMetadata={handleLoadedMetadata}
@@ -176,9 +180,11 @@ export function VideoPlayerModal({
                 {/* Control Buttons */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <button
+                    <Button
                       onClick={togglePlay}
-                      className="h-10 w-10 text-white cursor-pointer transition-colors hover:bg-white/20 flex items-center justify-center rounded-lg"
+                      className="h-10 w-10 text-white rounded-lg"
+                      size="icon"
+                      variant="ghost"
                       aria-label={isPlaying ? "Pause" : "Play"}
                     >
                       {isPlaying ? (
@@ -186,11 +192,13 @@ export function VideoPlayerModal({
                       ) : (
                         <Play className="h-5 w-5" />
                       )}
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       onClick={toggleMute}
-                      className="size-11 text-white cursor-pointer transition-colors hover:bg-white/10 flex items-center justify-center rounded-lg"
+                      size="icon"
+                      variant="ghost"
+                      className="size-11 text-white"
                       aria-label={isMuted ? "Unmute" : "Mute"}
                     >
                       {isMuted ? (
@@ -198,20 +206,22 @@ export function VideoPlayerModal({
                       ) : (
                         <Volume2 className="h-5 w-5" />
                       )}
-                    </button>
+                    </Button>
 
                     <span className="text-sm text-white">
                       {formatTime(currentTime)} / {formatTime(duration)}
                     </span>
                   </div>
 
-                  <button
+                  <Button
                     onClick={toggleFullscreen}
-                    className="h-10 w-10 text-white cursor-pointer transition-colors hover:bg-white/20 flex items-center justify-center rounded-lg"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 text-white"
                     aria-label="Toggle fullscreen"
                   >
                     <Maximize className="h-5 w-5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
