@@ -30,7 +30,7 @@ export default function RootLayout({
         className={`${creepster.variable} ${geistSans.variable} font-sans antialiased`}
       >
         {children}
-        <Toaster position="top-center" richColors />
+        <Toaster position="top-center" duration={2000} richColors />
       </body>
     </html>
   )
