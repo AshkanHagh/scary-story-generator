@@ -7,6 +7,7 @@ import type { Video } from "@/app/videos/_types"
 import Button from "@/components/ui/button"
 import { useState } from "react"
 import GenerateStoryFormModal from "@/components/generate-story/generate-story-form-modal"
+import { Sparkles } from "lucide-react"
 
 interface VideoGridProps {
   videos: Video[]
@@ -58,13 +59,18 @@ const NoVideos = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-border p-12 text-center"
       >
-        <p className="mb-2 font-sans text-xl font-semibold text-foreground">
+        <p className="mb-2 font-sans text-3xl font-semibold text-foreground">
           No videos yet
         </p>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground text-lg">
           Start creating scary stories to see them here
         </p>
-        <Button className="mt-5" onClick={() => setOpen(true)}>
+        <Button
+          size="lg"
+          className="mt-5 flex gap-2"
+          onClick={() => setOpen(true)}
+        >
+          <Sparkles />
           Generate Story
         </Button>
       </motion.div>

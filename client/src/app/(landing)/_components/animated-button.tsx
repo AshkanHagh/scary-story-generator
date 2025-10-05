@@ -9,7 +9,7 @@ const AnimatedButton = () => {
   const router = useRouter()
 
   const handleClick = () => {
-    router.push("/chat")
+    router.push("/videos")
   }
   return (
     <motion.div

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Creepster, Geist } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
+import AuthLayout from "@/components/layout/auth-layout"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${creepster.variable} ${geistSans.variable} font-sans antialiased`}
       >
-        {children}
+        <AuthLayout>{children}</AuthLayout>
         <Toaster position="top-center" duration={2000} richColors />
       </body>
     </html>
