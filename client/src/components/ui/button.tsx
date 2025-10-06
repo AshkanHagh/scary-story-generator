@@ -3,6 +3,7 @@
 import { cva, type VariantProps } from "class-variance-authority"
 import { motion, HTMLMotionProps } from "framer-motion"
 import type { ButtonHTMLAttributes } from "react"
+import { twMerge } from "tailwind-merge"
 
 const buttonVariants = cva(
   "inline-flex items-center cursor-pointer justify-center rounded-md font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none",
@@ -56,7 +57,7 @@ const Button = ({
     />
   ) : (
     <button
-      className={buttonVariants({ variant, size, className })}
+      className={twMerge(buttonVariants({ variant, size, className }))}
       {...props}
     />
   )
