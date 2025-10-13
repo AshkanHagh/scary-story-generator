@@ -58,7 +58,7 @@ export class VideoWorker extends WorkerHost {
 
           break;
         }
-        case VideoJobNames.COMBINE_SEGMENT_VIDEOS as string: {
+        case VideoJobNames.COMBINE_VIDEOS as string: {
           const payload = job.data as CombineSegmentVideosJobData;
           await this.combineSegmentVideos(payload);
 

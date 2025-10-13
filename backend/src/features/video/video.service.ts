@@ -51,7 +51,7 @@ export class VideoService implements IVideoService {
           segment,
         };
         return this.imageQueue.add(
-          ImageJobNames.DOWNLOAD_AND_GENERATE_SEGMENT_FRAME,
+          ImageJobNames.DOWNLOAD_SEGMENT_ASSETS,
           jobData,
         );
       }),

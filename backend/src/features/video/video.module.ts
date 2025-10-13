@@ -8,6 +8,7 @@ import { VideoService } from "./video.service";
 import { LlmAgentModule } from "../llm-agent/llm-agent.module";
 import { VideoUtilService } from "./util.service";
 import { StoryModule } from "../story/story.module";
+import { SegmentModule } from "../segment/segment.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { StoryModule } from "../story/story.module";
     RepositoryModule,
     LlmAgentModule,
     StoryModule,
+    SegmentModule,
     BullModule.registerQueue(
       {
         name: WorkerEvents.Image,

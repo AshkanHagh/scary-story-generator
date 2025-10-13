@@ -144,6 +144,6 @@ export class VideoUtilService implements OnModuleDestroy {
       tempPaths,
     };
 
-    await this.videoQueue.add(VideoJobNames.COMBINE_SEGMENT_VIDEOS, jobData);
+    await this.videoQueue.add(VideoJobNames.COMBINE_VIDEOS, jobData);
   }
 }

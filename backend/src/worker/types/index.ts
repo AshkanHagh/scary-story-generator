@@ -6,17 +6,16 @@ export type GenerateGuidedStoryJobData = {
   storyId: string;
 };
 
-export type GenerateImageContextJobData = {
+export type GenerateStoryCtx = {
+  step: "initial" | "final";
   storyId: string;
-  userId: string;
   script: string;
 };
 
-export type GenerateSegmentImageJobData = {
+export type GenerateSegmentImage = {
   storyId: string;
   segmentId: string;
   segment: string;
-  context: string;
 };
 
 export type RegenrateSegmentImageJobData = {
@@ -24,7 +23,7 @@ export type RegenrateSegmentImageJobData = {
   prompt: string;
 };
 
-export type GenerateSegmentVoiceJobData = {
+export type GenerateSegmentAudio = {
   segmentId: string;
   segment: string;
 };

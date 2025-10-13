@@ -6,11 +6,15 @@ import { BullModule } from "@nestjs/bullmq";
 import { WorkerEvents } from "src/worker/event";
 import { SegmentService } from "./segment.service";
 import { SegmentUtilService } from "./util.service";
+import { StoryModule } from "../story/story.module";
+import { LlmAgentModule } from "../llm-agent/llm-agent.module";
 
 @Module({
   imports: [
     AuthModule,
     RepositoryModule,
+    StoryModule,
+    LlmAgentModule,
     BullModule.registerQueue(
       {
         name: WorkerEvents.Story,

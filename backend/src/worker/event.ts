@@ -5,17 +5,17 @@ export enum WorkerEvents {
 }
 
 export enum StoryJobNames {
-  GENERATE_IMAGE_CONTEXT = "generate.image.context",
-  GENERATE_SEGMENT_IMAGE_REPLICATE = "generate.segment.image.replicate",
-  GENERATE_SEGMENT_VOICE = "generate.segment.voice",
+  GENERATE_STORY_CONTEXT = "story.generate.context",
+  GENERATE_SEGMENT_IMAGE = "story.generate.segment.image",
+  GENERATE_SEGMENT_VOICE = "story.generate.segment.voice",
 }
 
 export enum ImageJobNames {
-  GENERATE_IMAGE = "generate.image",
-  DOWNLOAD_AND_GENERATE_SEGMENT_FRAME = "download.segment.image.audio.frame.audio",
+  GENERATE_IMAGE = "image.generate",
+  DOWNLOAD_SEGMENT_ASSETS = "image.download.segment.assets",
 }
 
 export enum VideoJobNames {
-  GENERATE_SEGMENT_VIDEO = "generate.segment.video",
-  COMBINE_SEGMENT_VIDEOS = "combine.segment.videos",
+  GENERATE_SEGMENT_VIDEO = "video.generate.segment",
+  COMBINE_VIDEOS = "video.combine",
 }

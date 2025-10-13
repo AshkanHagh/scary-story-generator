@@ -1,26 +1,22 @@
-import { Processor, WorkerHost } from "@nestjs/bullmq";
+import { OnWorkerEvent, Processor, WorkerHost } from "@nestjs/bullmq";
 import { StoryJobNames, WorkerEvents } from "../event";
 import { Job } from "bullmq";
-import { RepositoryService } from "src/repository/repository.service";
-import {
-  GenerateImageContextJobData,
-  GenerateSegmentImageJobData,
-  GenerateSegmentVoiceJobData,
-} from "../types";
-import { S3Service } from "src/features/story/services/s3.service";
-import { v4 as uuid } from "uuid";
-import { StoryError, StoryErrorType } from "src/filter/exception";
 import { SegmentUtilService } from "src/features/segment/util.service";
-import { Inject } from "@nestjs/common";
+import { Inject, Logger } from "@nestjs/common";
 import { STORY_AGENT_SERVICE } from "src/features/llm-agent/constants";
 import { IStoryAgentService } from "src/features/llm-agent/interfaces/service";
+import {
+  GenerateSegmentAudio,
+  GenerateSegmentImage,
+  GenerateStoryCtx,
+} from "../types";
 
 @Processor(WorkerEvents.Story, { concurrency: 4 })
 export class StoryWorker extends WorkerHost {
+  private logger = new Logger(StoryWorker.name);
+
   constructor(
     @Inject(STORY_AGENT_SERVICE) private storyAgent: IStoryAgentService,
-    private repo: RepositoryService,
-    private s3: S3Service,
     private segmentUtilService: SegmentUtilService,
   ) {
     super();
@@ -28,87 +24,61 @@ export class StoryWorker extends WorkerHost {
 
   async process(job: Job): Promise<void> {
     try {
-      console.log("Processing job:", job.name);
-
       switch (job.name) {
-        case StoryJobNames.GENERATE_IMAGE_CONTEXT as string: {
-          const payload = job.data as GenerateImageContextJobData;
-          await this.generateImageContext(payload);
+        // TODO: make generate segment children of story context
+        case StoryJobNames.GENERATE_STORY_CONTEXT as string: {
+          const payload = job.data as GenerateStoryCtx;
 
+          await this.segmentUtilService.generateStoryContext(
+            payload.storyId,
+            payload.script,
+          );
+          // child process of generate story context
+          await this.segmentUtilService.generateSegmentsAndJobs(
+            job.id!,
+            payload.storyId,
+            payload.script,
+          );
           break;
         }
-        case StoryJobNames.GENERATE_SEGMENT_IMAGE_REPLICATE as string: {
-          const payload = job.data as GenerateSegmentImageJobData;
-          await this.generateSegmentImage(payload);
+        case StoryJobNames.GENERATE_SEGMENT_IMAGE as string: {
+          const payload = job.data as GenerateSegmentImage;
+          await this.segmentUtilService.generateSegmentImage(
+            payload.storyId,
+            payload.segmentId,
+            payload.segment,
+          );
 
           break;
         }
         case StoryJobNames.GENERATE_SEGMENT_VOICE as string: {
-          const payload = job.data as GenerateSegmentVoiceJobData;
-          await this.generateSegmentVoice(payload);
+          const payload = job.data as GenerateSegmentAudio;
+          await this.segmentUtilService.generateSegmentVoice(
+            payload.segmentId,
+            payload.segment,
+          );
         }
       }
-
-      console.log("Job processed successfully:", job.name);
-    } catch (error: unknown) {
-      console.log("Error processing job:", job.name);
-      console.error(error);
-
-      throw new StoryError(StoryErrorType.FailedToGenerateStory, error);
-    }
-  }
-
-  private async generateImageContext(
-    payload: GenerateImageContextJobData,
-  ): Promise<void> {
-    const context = await this.storyAgent.generateStoryContext(payload.script);
-
-    await this.repo.story().update(payload.storyId, { context });
-
-    const segments = payload.script.split(/\n{2,}/);
-    for (let i = 0; i < segments.length; i++) {
-      await this.segmentUtilService.createSegmentWithImage(
-        payload.userId,
-        payload.storyId,
-        segments[i],
-        i,
-        context,
+    } catch (error) {
+      this.logger.error(
+        `Error processing job ${job.name}: ${JSON.stringify(error)}`,
       );
+      throw error;
     }
   }
 
-  private async generateSegmentImage(
-    payload: GenerateSegmentImageJobData,
-  ): Promise<void> {
-    const prompt = await this.storyAgent.generateSegmentImagePrompt(
-      payload.context,
-      payload.segment,
-    );
-
-    await this.segmentUtilService.generateSegmentImage(
-      payload.storyId,
-      payload.segmentId,
-      prompt,
-    );
+  @OnWorkerEvent("active")
+  onActive(job: Job) {
+    this.logger.log(`Job ${job.name} is active`);
   }
 
-  private async generateSegmentVoice(
-    payload: GenerateSegmentVoiceJobData,
-  ): Promise<void> {
-    try {
-      const buffer = await this.storyAgent.generateSegmentVoice(
-        payload.segment,
-      );
+  @OnWorkerEvent("completed")
+  onCompleted(job: Job) {
+    this.logger.log(`Job ${job.name} is completed`);
+  }
 
-      const voiceId = uuid();
-      await this.s3.putObject(voiceId, "audio/mpeg", buffer);
-      await this.repo.segment().update(payload.segmentId, { voiceId });
-    } catch (error: unknown) {
-      await this.repo.segment().update(payload.segmentId, {
-        status: "failed",
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
-    }
+  @OnWorkerEvent("failed")
+  onFailed(job: Job) {
+    this.logger.error(`Job ${job.name} failed`);
   }
 }

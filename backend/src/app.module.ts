@@ -20,6 +20,10 @@ import { VideoModule } from "./features/video/video.module";
       useFactory: (config: ConfigService) => {
         const dbConfig = config.get<IDbConfig>("db");
         return {
+          defaultJobOptions: {
+            removeOnComplete: true,
+            removeOnFail: true,
+          },
           connection: {
             host: dbConfig?.redis.host,
             port: dbConfig?.redis.port,

@@ -15,6 +15,8 @@ export enum StoryErrorType {
   S3ReqFailed = "S3_REQUEST_FAILED",
   Timeout = "TIMEOUT",
   NotCompleted = "NOT_COMPLETED",
+  ImageGenerationFailed = "IMAGE_GENERATION_FAILED",
+  AudioGenerationFailed = "AUDIO_GENERATION_FAILED",
 }
 
 export class StoryError extends HttpException {

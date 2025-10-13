@@ -1,15 +1,10 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { ImageJobNames, WorkerEvents } from "../event";
 import { Job } from "bullmq";
-import {
-  DownloadSegmentAssetJobData,
-  RegenrateSegmentImageJobData,
-} from "../types";
+import { DownloadSegmentAssetJobData } from "../types";
 import { RepositoryService } from "src/repository/repository.service";
 import { ImageAgentService } from "src/features/llm-agent/services/image-agent.service";
-import sharp from "sharp";
 import { S3Service } from "src/features/story/services/s3.service";
-import { v4 as uuid } from "uuid";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import * as fs from "fs/promises";
 import { VideoUtilService } from "src/features/video/util.service";
@@ -30,13 +25,7 @@ export class ImageWorker extends WorkerHost {
 
     try {
       switch (job.name) {
-        case ImageJobNames.GENERATE_IMAGE as string: {
-          const payload = job.data as RegenrateSegmentImageJobData;
-          await this.generateSegmentImage(payload);
-
-          break;
-        }
-        case ImageJobNames.DOWNLOAD_AND_GENERATE_SEGMENT_FRAME as string: {
+        case ImageJobNames.DOWNLOAD_SEGMENT_ASSETS as string: {
           const payload = job.data as DownloadSegmentAssetJobData;
 
           const { imagePath, voicePath } = await this.downloadImageAndVoice(
@@ -70,53 +59,6 @@ export class ImageWorker extends WorkerHost {
       console.error(error);
 
       throw new StoryError(StoryErrorType.FailedToGenerateImage, error);
-    }
-  }
-
-  private async generateSegmentImage(payload: RegenrateSegmentImageJobData) {
-    try {
-      let output: string;
-
-      if (process.env.NODE_ENV === "production") {
-        output = await this.imageAgent.generateImageUsingFlux({
-          prompt: payload.prompt,
-          num_outputs: 1,
-          disable_safety_checker: false,
-          aspect_ratio: "16:9",
-          output_format: "jpg",
-          output_quality: 90,
-        });
-      } else {
-        // randome image from unsplash
-        output =
-          "https://fastly.picsum.photos/id/136/1080/720.jpg?hmac=C8l17RLTHDzR3pYXPzVE1J-guaFGe6_7ifKoVmFuYUY";
-      }
-
-      // TODO: required try catch
-      const response = await fetch(output);
-      const imageBuffer = Buffer.from(await response.arrayBuffer());
-
-      const originalImage = await sharp(imageBuffer)
-        .webp({ quality: 90 })
-        .toBuffer();
-
-      const imageId = uuid();
-      const url = await this.s3.putObject(imageId, "image/webp", originalImage);
-
-      await this.repo.segment().update(payload.segmentId, {
-        // mark as completed because the image takes longer then voice to generate so the last task is image
-        status: "completed",
-        prompt: payload.prompt,
-        imageId,
-        imageUrl: url,
-      });
-    } catch (error: unknown) {
-      await this.repo.segment().update(payload.segmentId, {
-        status: "failed",
-        error: error instanceof Error ? error.message : String(error),
-      });
-
-      throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
     }
   }
 
