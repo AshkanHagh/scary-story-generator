@@ -4,7 +4,7 @@ import { InjectQueue } from "@nestjs/bullmq";
 import { StoryJobNames, WorkerEvents } from "src/worker/event";
 import { Queue } from "bullmq";
 import { RepositoryService } from "src/repository/repository.service";
-import { GenerateImageContextJobData } from "src/worker/types";
+import { GenerateStoryCtx } from "src/worker/types";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { ISegment } from "src/drizzle/schema";
 import { PollSegmentsStatusResponse } from "./types";
@@ -18,16 +18,21 @@ export class SegmentService implements ISegmentService {
   ) {}
 
   // TODO: add check for story already have segment or not
+  /*
+    starts job flow to generate story context and segments
+    and segments image/audios
+  */
   async generateSegment(userId: string, storyId: string): Promise<void> {
     // Throws error if story does not exist
     const story = await this.repo.story().userHasAccess(storyId, userId);
-
-    const jobData: GenerateImageContextJobData = {
+    await this.storyQueue.add(StoryJobNames.GENERATE_STORY_CONTEXT, <
+      GenerateStoryCtx
+    >{
+      step: "initial",
       script: story.script,
       storyId,
       userId,
-    };
-    await this.storyQueue.add(StoryJobNames.GENERATE_IMAGE_CONTEXT, jobData);
+    });
   }
 
   async getSegments(userId: string, storyId: string): Promise<ISegment[]> {

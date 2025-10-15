@@ -4,7 +4,6 @@ import { RepositoryService } from "./repository.service";
 import { UserRepository } from "./repositories/user";
 import { StoryRepository } from "./repositories/story";
 import { SegmentRepository } from "./repositories/segment";
-import { VideoProcessingStatusRepository } from "./repositories/video-processing-status";
 import { VideoRepository } from "./repositories/video";
 
 @Module({
@@ -14,7 +13,6 @@ import { VideoRepository } from "./repositories/video";
     UserRepository,
     StoryRepository,
     SegmentRepository,
-    VideoProcessingStatusRepository,
     VideoRepository,
   ],
   exports: [RepositoryService],

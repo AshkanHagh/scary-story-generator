@@ -17,7 +17,6 @@ export class StoryAgentService implements IStoryAgentService {
 
   constructor(@AiConfig() private config: IAiConfig) {
     this.openai = new OpenAI({
-      // baseURL: this.config.openai.endpoint,
       apiKey: this.config.openai.secret,
     });
   }
@@ -42,14 +41,9 @@ export class StoryAgentService implements IStoryAgentService {
 
       console.log("generate story context token usage:", response.usage);
 
-      const context = response.choices[0].message.content;
-      if (!context) {
-        throw new StoryError(StoryErrorType.FailedToGenerateStory);
-      }
-
-      return context;
+      return response.choices[0].message.content || "";
     } catch (error: unknown) {
-      throw new StoryError(StoryErrorType.LlmAgentFailed, error);
+      throw new StoryError(StoryErrorType.ContextGenerationFailed, error);
     }
   }
 
@@ -92,15 +86,11 @@ export class StoryAgentService implements IStoryAgentService {
 
       console.log("generate segment image prompt token usage:", response.usage);
 
-      const promptString = response.choices[0].message.content;
-      if (!promptString) {
-        throw new StoryError(StoryErrorType.FailedToGenerateStory);
-      }
-
+      const promptString = response.choices[0].message.content!;
       const prompt = JSON.parse(promptString) as GenerateSegmentImagePrompt;
       return prompt.prompt;
     } catch (error: unknown) {
-      throw new StoryError(StoryErrorType.LlmAgentFailed, error);
+      throw new StoryError(StoryErrorType.ContextGenerationFailed, error);
     }
   }
 
@@ -114,7 +104,7 @@ export class StoryAgentService implements IStoryAgentService {
 
       return Buffer.from(await response.arrayBuffer());
     } catch (error: unknown) {
-      throw new StoryError(StoryErrorType.LlmAgentFailed, error);
+      throw new StoryError(StoryErrorType.ContextGenerationFailed, error);
     }
   }
 
@@ -128,13 +118,9 @@ export class StoryAgentService implements IStoryAgentService {
         temperature: 0,
       });
 
-      if (!response || !response.words) {
-        throw new StoryError(StoryErrorType.LlmAgentFailed);
-      }
-
-      return response.words;
+      return response.words!;
     } catch (error: unknown) {
-      throw new StoryError(StoryErrorType.LlmAgentFailed, error);
+      throw new StoryError(StoryErrorType.ContextGenerationFailed, error);
     }
   }
 }

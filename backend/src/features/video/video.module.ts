@@ -6,8 +6,9 @@ import { BullModule } from "@nestjs/bullmq";
 import { WorkerEvents } from "src/worker/event";
 import { VideoService } from "./video.service";
 import { LlmAgentModule } from "../llm-agent/llm-agent.module";
-import { VideoUtilService } from "./util.service";
+import { VideoUtilService } from "./util-services/util.service";
 import { StoryModule } from "../story/story.module";
+import { SegmentModule } from "../segment/segment.module";
 
 @Module({
   imports: [
@@ -15,14 +16,10 @@ import { StoryModule } from "../story/story.module";
     RepositoryModule,
     LlmAgentModule,
     StoryModule,
-    BullModule.registerQueue(
-      {
-        name: WorkerEvents.Image,
-      },
-      {
-        name: WorkerEvents.Video,
-      },
-    ),
+    SegmentModule,
+    BullModule.registerFlowProducer({
+      name: WorkerEvents.Flow,
+    }),
   ],
   providers: [VideoService, VideoUtilService],
   controllers: [VideoController],

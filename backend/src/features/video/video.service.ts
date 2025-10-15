@@ -1,41 +1,44 @@
-import { InjectQueue } from "@nestjs/bullmq";
+import { InjectFlowProducer } from "@nestjs/bullmq";
 import { IVideoService } from "./interfaces/service";
-import { ImageJobNames, WorkerEvents } from "src/worker/event";
-import { Queue } from "bullmq";
+import { ImageJobNames, VideoJobNames, WorkerEvents } from "src/worker/event";
+import { FlowChildJob, FlowProducer } from "bullmq";
 import { RepositoryService } from "src/repository/repository.service";
 import { StoryError, StoryErrorType } from "src/filter/exception";
-import { DownloadSegmentAssetJobData } from "src/worker/types";
 import { IVideoRecord } from "src/drizzle/schema";
 import { pollUntil } from "src/utils/poll";
 import { Injectable } from "@nestjs/common";
+import {
+  CombineVideos,
+  DownloadAsset,
+  GenerateSegmentFrame,
+  GenerateSegmentVideo,
+} from "src/worker/types";
+import { TmpDirService } from "./util-services/tmp-dir.service";
+import * as path from "node:path";
 
 @Injectable()
 export class VideoService implements IVideoService {
   constructor(
-    @InjectQueue(WorkerEvents.Image) private imageQueue: Queue,
+    @InjectFlowProducer(WorkerEvents.Flow) private flowProducer: FlowProducer,
     private repo: RepositoryService,
   ) {}
 
+  /*
+    starts the flow of video creation
+    generates all the disks path here and pass to jobs
+  */
   async generateVideo(userId: string, storyId: string): Promise<string> {
     const story = await this.repo.story().findWithSegments(storyId);
     if (!story) {
       throw new StoryError(StoryErrorType.NotFound);
     }
-
     if (story.userId !== userId) {
       throw new StoryError(StoryErrorType.HasNoPermission);
     }
-
     story.segments.forEach((segment) => {
       if (segment.status === "pending") {
         throw new StoryError(StoryErrorType.NotCompleted);
       }
-    });
-
-    await this.repo.videoProcessingStatus().insert({
-      storyId: story.id,
-      totalSegments: story.segments.length,
-      completedSegments: 0,
     });
 
     const video = await this.repo.video().insert({
@@ -44,18 +47,85 @@ export class VideoService implements IVideoService {
       userId,
     });
 
-    await Promise.all([
-      story.segments.map((segment) => {
-        const jobData: DownloadSegmentAssetJobData = {
-          videoId: video.id,
-          segment,
-        };
-        return this.imageQueue.add(
-          ImageJobNames.DOWNLOAD_AND_GENERATE_SEGMENT_FRAME,
-          jobData,
-        );
-      }),
-    ]);
+    // generates tmp dirs
+    const tmpDirService = new TmpDirService();
+    const [videoDir, audioDir, imageDir, srtDir, finishedVideoDir] =
+      await Promise.all(
+        Array(5)
+          .fill(null)
+          .map(() => tmpDirService.addDir()),
+      );
+    const allTmpDirs = tmpDirService.getAll();
+
+    const segmentVideoJobs: FlowChildJob[] = [];
+    for (const segment of story.segments) {
+      const frameDirPath = await tmpDirService.addDir();
+      allTmpDirs.push(frameDirPath);
+
+      // join pathes for each segment
+      const videoOrder = String(segment.order).padStart(2, "0");
+      const videoPath = path.join(videoDir, `${segment.id}_${videoOrder}.mp4`);
+      const audioPath = path.join(audioDir, `${segment.voiceId}.mp3`);
+      const imagePath = path.join(imageDir, `${segment.imageId}.jpeg`);
+      const srtPath = path.join(srtDir, `${segment.id}.srt`);
+
+      segmentVideoJobs.push({
+        name: VideoJobNames.GENERATE_VIDEO,
+        queueName: WorkerEvents.Video,
+        data: <GenerateSegmentVideo>{
+          audioPath,
+          frameDir: frameDirPath,
+          srtPath,
+          segmentId: segment.id,
+          tmpDirs: { dirs: allTmpDirs },
+          videoPath,
+        },
+        children: [
+          {
+            name: VideoJobNames.GENERATE_SEGMENT_FRAME,
+            queueName: WorkerEvents.Video,
+            data: <GenerateSegmentFrame>{
+              audioPath,
+              frameDir: frameDirPath,
+              imagePath,
+              segmentId: segment.id,
+              srtPath,
+              tmpDirs: { dirs: allTmpDirs },
+            },
+            children: [
+              {
+                name: ImageJobNames.DOWNLOAD_ASSETS,
+                queueName: WorkerEvents.Image,
+                data: <DownloadAsset>{
+                  audioPath,
+                  imageId: segment.imageId,
+                  imagePath,
+                  voiceId: segment.voiceId,
+                  tmpDirs: { dirs: allTmpDirs },
+                },
+              },
+            ],
+          },
+        ],
+      });
+    }
+
+    const finishedVideoPath = path.join(finishedVideoDir, `${video.id}.mp4`);
+
+    // flow: download assets -> generate segment frame -> generate segment video -> combine videos
+    await this.flowProducer.add({
+      name: VideoJobNames.COMBINE_VIDEOS,
+      queueName: WorkerEvents.Video,
+      data: <CombineVideos>{
+        videoId: video.id,
+        videoDir: videoDir,
+        videoOutputPath: finishedVideoPath,
+        tmpDirs: {
+          dirs: allTmpDirs,
+        },
+      },
+      children: segmentVideoJobs,
+    });
 
     return video.id;
   }

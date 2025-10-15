@@ -2,20 +2,21 @@ export enum WorkerEvents {
   Story = "story",
   Image = "image",
   Video = "video",
+  Flow = "flow",
 }
 
 export enum StoryJobNames {
-  GENERATE_IMAGE_CONTEXT = "generate.image.context",
-  GENERATE_SEGMENT_IMAGE_REPLICATE = "generate.segment.image.replicate",
-  GENERATE_SEGMENT_VOICE = "generate.segment.voice",
+  GENERATE_STORY_CONTEXT = "story.generate.context",
+  GENERATE_SEGMENT_IMAGE = "story.generate.segment.image",
+  GENERATE_SEGMENT_VOICE = "story.generate.segment.voice",
 }
 
 export enum ImageJobNames {
-  GENERATE_IMAGE = "generate.image",
-  DOWNLOAD_AND_GENERATE_SEGMENT_FRAME = "download.segment.image.audio.frame.audio",
+  DOWNLOAD_ASSETS = "image.download.assets",
 }
 
 export enum VideoJobNames {
-  GENERATE_SEGMENT_VIDEO = "generate.segment.video",
-  COMBINE_SEGMENT_VIDEOS = "combine.segment.videos",
+  GENERATE_VIDEO = "video.generate.video",
+  COMBINE_VIDEOS = "video.combine.videos",
+  GENERATE_SEGMENT_FRAME = "video.generate.segment.frame",
 }
