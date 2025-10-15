@@ -5,7 +5,7 @@ export const authConfig = registerAs("auth", () => {
   return {
     anonymousToken: {
       secret: process.env.ANONYMOUS_TOKEN_SECRET,
-      exp: 60 * 60 * 12,
+      exp: 60 * 60 * 24 * 30,
     },
   };
 });

@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { RepositoryService } from "src/repository/repository.service";
 import { InjectQueue } from "@nestjs/bullmq";
 import { StoryJobNames, WorkerEvents } from "src/worker/event";
-import { BulkJobOptions, Queue } from "bullmq";
+import { Queue } from "bullmq";
 import { StoryError, StoryErrorType } from "src/filter/exception";
 import { StoryAgentService } from "../llm-agent/services/story-agent.service";
 import { ImageAgentService } from "../llm-agent/services/image-agent.service";
@@ -27,15 +27,10 @@ export class SegmentUtilService {
     NOTE: runs after story context completed
     generate segments from story and start generate image/audio for each segment
    */
-  async generateSegmentsAndJobs(
-    jobParentId: string,
-    storyId: string,
-    script: string,
-  ) {
+  async generateSegmentsAndJobs(storyId: string, script: string) {
     const segmentJobs: {
       name: string;
       data: unknown;
-      otps?: BulkJobOptions;
     }[] = [];
     const segments = script.split(/\n{2,}/);
 
@@ -55,24 +50,12 @@ export class SegmentUtilService {
             segmentId: segment.id,
             segment: segments[i],
           },
-          otps: {
-            parent: {
-              id: jobParentId,
-              queue: StoryJobNames.GENERATE_STORY_CONTEXT,
-            },
-          },
         },
         {
           name: StoryJobNames.GENERATE_SEGMENT_VOICE,
           data: <GenerateSegmentAudio>{
             segment: segments[i],
             segmentId: segment.id,
-          },
-          otps: {
-            parent: {
-              id: jobParentId,
-              queue: StoryJobNames.GENERATE_STORY_CONTEXT,
-            },
           },
         },
       );
@@ -97,7 +80,6 @@ export class SegmentUtilService {
     segment: string,
   ): Promise<void> {
     const story = (await this.repo.story().find(storyId)) as IStory;
-    console.log(story.context);
 
     const prompt = await this.storyAgentService.generateSegmentImagePrompt(
       // story context already generated
