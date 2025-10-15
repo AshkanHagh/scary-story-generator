@@ -15,14 +15,9 @@ import { LlmAgentModule } from "../llm-agent/llm-agent.module";
     RepositoryModule,
     StoryModule,
     LlmAgentModule,
-    BullModule.registerQueue(
-      {
-        name: WorkerEvents.Story,
-      },
-      {
-        name: WorkerEvents.Image,
-      },
-    ),
+    BullModule.registerQueue({
+      name: WorkerEvents.Story,
+    }),
   ],
   providers: [SegmentService, SegmentUtilService],
   controllers: [SegmentController],

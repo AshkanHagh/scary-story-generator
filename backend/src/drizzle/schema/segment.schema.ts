@@ -20,7 +20,6 @@ export const SegmentTable = pgTable("segments", (table) => {
     prompt: table.text(),
     imageId: table.uuid(),
     voiceId: table.uuid(),
-    videoId: table.uuid(),
     imageUrl: table.text(),
     status: SegmentStatus().notNull(),
     error: table.text(),

@@ -103,17 +103,11 @@ export class SegmentUtilService {
           "https://fastly.picsum.photos/id/136/1080/720.jpg?hmac=C8l17RLTHDzR3pYXPzVE1J-guaFGe6_7ifKoVmFuYUY";
       }
 
-      let resizedImageBuf: Buffer<ArrayBuffer>;
-      try {
-        const response = await fetch(output);
-        const imageBuffer = Buffer.from(await response.arrayBuffer());
-
-        resizedImageBuf = await sharp(imageBuffer)
-          .webp({ quality: 90 })
-          .toBuffer();
-      } catch (error) {
-        throw new StoryError(StoryErrorType.ImageGenerationFailed, error);
-      }
+      const response = await fetch(output);
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
+      const resizedImageBuf = await sharp(imageBuffer)
+        .webp({ quality: 90 })
+        .toBuffer();
 
       const imageId = randomUUID();
       const url = await this.s3Service.putObject(
@@ -134,7 +128,7 @@ export class SegmentUtilService {
         error: error instanceof Error ? error.message : String(error),
       });
 
-      throw new StoryError(StoryErrorType.FailedToGenerateImage, error);
+      throw new StoryError(StoryErrorType.ImageGenerationFailed, error);
     }
   }
 

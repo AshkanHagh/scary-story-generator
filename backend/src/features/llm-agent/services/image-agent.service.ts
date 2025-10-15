@@ -1,4 +1,3 @@
-import { StoryError, StoryErrorType } from "src/filter/exception";
 import { IImageAgentService } from "../interfaces/service";
 import { AiConfig, IAiConfig } from "src/configs/ai.config";
 import { Injectable } from "@nestjs/common";
@@ -18,16 +17,12 @@ export class ImageAgentService implements IImageAgentService {
   async generateImageUsingFlux(
     options: ImageGenerationOptions,
   ): Promise<string> {
-    try {
-      const response = await this.replicate.run(
-        "black-forest-labs/flux-schnell",
-        {
-          input: options,
-        },
-      );
-      return response[0] as string;
-    } catch (error: unknown) {
-      throw new StoryError(StoryErrorType.FailedToGenerateSegment, error);
-    }
+    const response = await this.replicate.run(
+      "black-forest-labs/flux-schnell",
+      {
+        input: options,
+      },
+    );
+    return response[0] as string;
   }
 }

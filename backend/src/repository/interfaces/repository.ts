@@ -3,8 +3,6 @@ import {
   ISegmentInsertForm,
   IUser,
   IUserInsertForm,
-  IVideoProcessingStatus,
-  IVideoProcessingStatusInsertForm,
 } from "src/drizzle/schema";
 import {
   IStory,
@@ -35,14 +33,6 @@ export interface ISegmentRepository {
   insert(form: ISegmentInsertForm): Promise<ISegment>;
   update(id: string, form: Partial<ISegmentInsertForm>): Promise<void>;
   find(id: string): Promise<ISegment | undefined>;
-}
-
-export interface IVideoProcessingStatusRepository {
-  insert(form: IVideoProcessingStatusInsertForm): Promise<void>;
-  updateCompletedSegment(
-    storyId: string,
-    form: Partial<IVideoProcessingStatusInsertForm>,
-  ): Promise<IVideoProcessingStatus>;
 }
 
 export interface IVideoRepository {

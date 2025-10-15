@@ -1,5 +1,3 @@
-import { ISegment } from "src/drizzle/schema";
-
 export type GenerateGuidedStoryJobData = {
   userId: string;
   script: string;
@@ -28,31 +26,43 @@ export type GenerateSegmentAudio = {
   segment: string;
 };
 
-export type DownloadSegmentAssetJobData = {
-  videoId: string;
-  segment: ISegment;
+export type DownloadAsset = {
+  imageId: string;
+  voiceId: string;
+  imagePath: string;
+  audioPath: string;
+  tmpDirs: { dirs: string[] };
 };
 
-export type GenerateImageFrameJobData = {
+export type GenerateSegmentFrame = {
+  segmentId: string;
+  imagePath: string;
+  audioPath: string;
+  srtPath: string;
+  frameDir: string;
+  tmpDirs: { dirs: string[] };
+};
+
+export type GenerateFrameWorker = {
   frameIndex: number;
   imagePath: string;
   outputDir: string;
 };
 
-export type GenerateSegmentVideoJobData = {
+export type GenerateSegmentVideo = {
+  videoPath: string;
+  srtPath: string;
+  audioPath: string;
   segmentId: string;
-  storyId: string;
-  segmentOrder: number;
-  frameRate: number;
-  videoId: string;
-  tempPaths: TempFilePaths;
+  frameDir: string;
+  tmpDirs: { dirs: string[] };
 };
 
-export type CombineSegmentVideosJobData = {
+export type CombineVideos = {
   videoId: string;
-  videosPath: string;
-  outputPath: string;
-  tempPaths: TempFilePaths;
+  videoDir: string;
+  videoOutputPath: string;
+  tmpDirs: { dirs: string[] };
 };
 
 export type TempFilePaths = {
