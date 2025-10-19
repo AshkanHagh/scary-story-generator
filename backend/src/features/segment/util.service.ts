@@ -99,8 +99,7 @@ export class SegmentUtilService {
           output_quality: 90,
         });
       } else {
-        output =
-          "https://fastly.picsum.photos/id/136/1080/720.jpg?hmac=C8l17RLTHDzR3pYXPzVE1J-guaFGe6_7ifKoVmFuYUY";
+        output = "https://s6.uupload.ir/files/building_ut1z.png";
       }
 
       const response = await fetch(output);
