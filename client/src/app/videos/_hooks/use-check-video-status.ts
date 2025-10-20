@@ -1,4 +1,4 @@
-import api from "@/api/instance"
+import { api } from "@/api/instance"
 import { Video } from "../_types"
 import { HTTPError, KyRequest, KyResponse, Options } from "ky"
 
@@ -12,25 +12,9 @@ const useCheckVideosStatus = () => {
     onSuccess?: OnSuccess,
     onError?: OnError
   ) => {
-    // Ky hook that runs after each response
-    const afterResponse = async (
-      request: KyRequest,
-      options: Options,
-      response: KyResponse
-    ) => {
-      const data = await response.json<Video>()
-      if (data.status === "pending") {
-        return api(request, options)
-      }
-    }
-
     try {
       const response = await api
-        .get<Video>(`videos/${id}/status`, {
-          hooks: {
-            afterResponse: [afterResponse]
-          }
-        })
+        .get<Video>(`videos/${id}/status`, { timeout: false })
         .json()
 
       onSuccess?.(response)

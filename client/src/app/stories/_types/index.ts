@@ -9,7 +9,7 @@ export type Segment = {
   updatedAt: string
 }
 
-export type StorySegmentsResponse = {
+export type SegmentsStatusResponse = {
   isCompleted: boolean
   segments: Segment[]
 }

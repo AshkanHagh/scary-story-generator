@@ -93,7 +93,7 @@ const SegmentCard = ({ segment, index }: SegmentCardProps) => {
 
         {/* Story Text */}
         {segment.text && (
-          <p className="text-sm text-foreground/80 leading-relaxed tracking-wide">
+          <p className="text-sm text-foreground/80 leading-relaxed tracking-wide line-clamp-6">
             {segment.text}
           </p>
         )}

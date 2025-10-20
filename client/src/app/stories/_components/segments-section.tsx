@@ -3,16 +3,15 @@
 import { useEffect, useMemo, useState } from "react"
 import { useParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import SegmentCard from "@/app/stories/_components/segment-card"
 import { CompleteButton } from "@/app/stories/_components/complete-button"
-import { Segment, StorySegmentsResponse } from "../_types"
+import { Segment } from "../_types"
 import CompletionAnimations from "./completion-animation"
 import useCheckSegmentsStatus from "../_hooks/use-check-segments-status"
 import SegmentsStatus from "./segments-status"
 import SegmentsGrid from "./segments-grid"
 
 type SegmentSectionProps = {
-  segmentsResponse: StorySegmentsResponse
+  segmentsResponse: Segment[]
 }
 
 type SegmentsCompletedStatus = {
@@ -22,11 +21,9 @@ type SegmentsCompletedStatus = {
 
 const SegmentsSection = ({ segmentsResponse }: SegmentSectionProps) => {
   const [segments, setSegments] = useState<Segment[]>(() =>
-    sortSegments(segmentsResponse.segments)
+    sortSegments(segmentsResponse)
   )
-  const [allSegmentsCompleted, setAllSegmentsCompleted] = useState(
-    segmentsResponse.isCompleted
-  )
+  const [allSegmentsCompleted, setAllSegmentsCompleted] = useState(false)
   const { checkSegmentsStatus } = useCheckSegmentsStatus()
   const { storyId } = useParams()
 
@@ -36,10 +33,10 @@ const SegmentsSection = ({ segmentsResponse }: SegmentSectionProps) => {
       storyId as string,
       (data) => {
         setAllSegmentsCompleted(data.isCompleted)
-        setSegments(data.segments)
+        setSegments(sortSegments(data.segments))
       },
       (data) => {
-        setSegments(data.segments)
+        setSegments(sortSegments(data.segments))
       }
     )
   }, [])
@@ -65,8 +62,6 @@ const SegmentsSection = ({ segmentsResponse }: SegmentSectionProps) => {
     [segments]
   )
 
-  const isCompleting = completedCount >= totalCount
-
   return (
     <>
       {/* Background Color */}
@@ -87,10 +82,7 @@ const SegmentsSection = ({ segmentsResponse }: SegmentSectionProps) => {
         {/* Complete Button */}
         {segments.length > 0 && (
           <motion.div className="flex justify-center fixed bottom-0 right-0 left-0 mx-auto py-5">
-            <CompleteButton
-              isEnabled={allSegmentsCompleted}
-              isLoading={isCompleting}
-            />
+            <CompleteButton isEnabled={allSegmentsCompleted} />
           </motion.div>
         )}
 

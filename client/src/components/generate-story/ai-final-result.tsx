@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 import { Check, Edit, Sparkles } from "lucide-react"
 import Button from "../ui/button"
 import { toast } from "sonner"
-import { GenerateStoryResponse } from "./generate-story-form-modal"
+import { GenerateStoryResponse } from "@/types/story"
 
 type AiFinalResultProps = {
   onConfirm: () => Promise<void>
@@ -60,7 +60,7 @@ const AiFinalResult = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="rounded-lg border border-border bg-muted/50 p-4"
+            className="rounded-lg border max-h-56 border-border bg-muted/50 p-4 overflow-y-auto"
           >
             <p className="font-sans leading-relaxed tracking-wide text-foreground">
               {response.script}

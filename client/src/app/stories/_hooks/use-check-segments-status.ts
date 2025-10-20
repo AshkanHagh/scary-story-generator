@@ -1,9 +1,9 @@
-import api from "@/api/instance"
+import { api } from "@/api/instance"
 import { HTTPError, KyRequest, KyResponse, Options } from "ky"
-import { StorySegmentsResponse } from "../_types"
+import { SegmentsStatusResponse } from "../_types"
 
 // Callback type definitions
-type OnSuccess = (data: StorySegmentsResponse) => void
+type OnSuccess = (data: SegmentsStatusResponse) => void
 type OnError = (error: HTTPError | Error) => void
 
 const useCheckSegmentsStatus = () => {
@@ -19,7 +19,7 @@ const useCheckSegmentsStatus = () => {
       options: Options,
       response: KyResponse
     ) => {
-      const data = await response.json<StorySegmentsResponse>()
+      const data = await response.json<SegmentsStatusResponse>()
 
       // If the story is not completed, trigger callback and retry request
       if (!data.isCompleted) {
@@ -30,7 +30,7 @@ const useCheckSegmentsStatus = () => {
 
     try {
       const response = await api
-        .get<StorySegmentsResponse>(`segments/${id}/status`, {
+        .get<SegmentsStatusResponse>(`segments/${id}/status`, {
           hooks: {
             afterResponse: [afterResponse]
           },

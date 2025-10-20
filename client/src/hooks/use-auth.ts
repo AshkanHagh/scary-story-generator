@@ -1,8 +1,9 @@
-import api from "@/api/instance"
+import { api } from "@/api/instance"
 import { Auth } from "@/types/auth"
 import { wait } from "@/utils"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
+import Cookies from "js-cookie"
 
 const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true)
@@ -12,9 +13,10 @@ const useAuth = () => {
     try {
       await wait()
       const response = await api
-        .get<Auth>("anonymous", { retry: { limit: 3 } })
+        .post<Auth>("auth/anonymous", { retry: { limit: 3 } })
         .json()
       sessionStorage.setItem("token", response.token)
+      Cookies.set("token", response.token, { path: "/" })
     } catch (error) {
       console.log(error)
       toast.error("Failed to load your data!", {

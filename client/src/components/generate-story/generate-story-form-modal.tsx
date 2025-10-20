@@ -3,13 +3,15 @@
 import { useState, type ChangeEvent, type FormEvent } from "react"
 import { motion } from "framer-motion"
 import { Loader2, Sparkles } from "lucide-react"
-import { toast } from "sonner"
 import ModalBase from "@/components/ui/modal-base"
 import Button from "@/components/ui/button"
 import Input from "@/components/ui/input"
 import Textarea from "@/components/ui/textarea"
 import AiFinalResult from "./ai-final-result"
-import api from "@/api/instance"
+import useGenerateStory from "@/hooks/use-generate-story"
+import { GenerateStoryResponse } from "@/types/story"
+import useConfirmStory from "@/hooks/use-confirm-story"
+import { useRouter } from "next/navigation"
 
 type FormValues = {
   title: string
@@ -22,15 +24,6 @@ type GenerateStoryFormModalProps = {
   onConfirm?: () => void
   onSubmit?: (values: GenerateStoryResponse) => void
   defaultValues?: Partial<FormValues>
-}
-
-export type GenerateStoryResponse = {
-  id: string
-  userId: string
-  title: string
-  script: string
-  createdAt: string
-  updatedAt: string
 }
 
 const transition = { duration: 0.3 }
@@ -46,8 +39,10 @@ const GenerateStoryFormModal = ({
     title: defaultValues?.title ?? "",
     description: defaultValues?.description ?? ""
   })
-  const [loading, setLoading] = useState(false)
   const [aiResult, setAiResult] = useState<GenerateStoryResponse | null>(null)
+  const { generateStory, isLoading } = useGenerateStory()
+  const { confirmStory, isLoading: isConfirming } = useConfirmStory()
+  const router = useRouter()
 
   const isFormValid =
     formValues.title.trim().length >= 3 &&
@@ -62,30 +57,23 @@ const GenerateStoryFormModal = ({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!isFormValid) return
 
-    setLoading(true)
-    try {
-      const result = await api.post<GenerateStoryResponse>("stories").json() // replace with another custom hook
-      setAiResult(result)
-      onSubmit?.(result)
-    } catch (error) {
-      console.log(error)
-      toast.error("Something went wrong!")
-    } finally {
-      setLoading(false)
-    }
+    if (!isFormValid) return
+    const body = { title: formValues.title, script: formValues.description }
+    await generateStory(body, (data) => {
+      setAiResult(data)
+      onSubmit?.(data)
+    })
   }
 
   const handleConfirm = async () => {
     if (!aiResult) return
-    onConfirm?.()
+    const storyId = aiResult.id
 
-    try {
-      api.post(`segments/:${aiResult.id}`) // replace with another custom hook
-    } catch (error) {
-      console.log(error)
-    }
+    await confirmStory(storyId, () => {
+      onConfirm?.()
+      router.push(`/stories/${storyId}`)
+    })
     resetForm()
     onClose()
   }
@@ -93,7 +81,6 @@ const GenerateStoryFormModal = ({
   const resetForm = () => {
     setFormValues({ title: "", description: "" })
     setAiResult(null)
-    setLoading(false)
   }
 
   // ---------- Render ----------
@@ -114,10 +101,11 @@ const GenerateStoryFormModal = ({
             <Input
               id="title"
               label="Title"
+              className="tracking-wider font-thin"
               value={formValues.title}
               onChange={handleInputChange}
               placeholder="Enter a title..."
-              disabled={loading}
+              disabled={isLoading}
               variant="outline"
               maxLength={80}
             />
@@ -132,14 +120,15 @@ const GenerateStoryFormModal = ({
               id="description"
               label="Description"
               value={formValues.description}
+              className="tracking-wider font-thin"
               onChange={handleInputChange}
               placeholder="Enter a description..."
-              disabled={loading}
+              disabled={isLoading}
               variant="outline"
-              maxLength={500}
+              maxLength={10000}
             />
             <p className="text-xs text-muted-foreground">
-              {formValues.description.length}/500 characters
+              {formValues.description.length}/10000 characters
             </p>
           </div>
 
@@ -149,16 +138,16 @@ const GenerateStoryFormModal = ({
               type="button"
               variant="outline"
               onClick={onClose}
-              disabled={loading}
+              disabled={isLoading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={!isFormValid || loading}
+              disabled={!isFormValid || isLoading}
               className="min-w-32"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Processing...
@@ -174,7 +163,7 @@ const GenerateStoryFormModal = ({
         </motion.form>
       ) : (
         <AiFinalResult
-          isLoading={false}
+          isLoading={isConfirming}
           onConfirm={handleConfirm}
           response={aiResult}
         />

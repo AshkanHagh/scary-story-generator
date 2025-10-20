@@ -1,18 +1,20 @@
 import ky from "ky"
+import { cookies } from "next/headers"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
-export const api = ky.create({
+export const serverApi = ky.create({
   prefixUrl: BASE_URL,
   headers: {
     "Content-Type": "application/json"
   },
-  cache: "no-store",
   retry: 0,
+  cache: "no-store",
   hooks: {
     beforeRequest: [
-      (request) => {
-        const token = sessionStorage.getItem("token")
+      async (request) => {
+        const token = (await cookies()).get("token")?.value
+        console.log(token)
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`)
         }

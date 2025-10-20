@@ -1,19 +1,21 @@
-"use client"
-
-import { VideoGrid } from "@/app/videos/_components/video-grid"
 import Heading from "./_components/heading"
-import useGetVideos from "./_hooks/use-get-videos"
+import { Suspense } from "react"
+import VideoGridLoading from "./_components/video-grid-loading"
+import Videos from "./_components/videos"
 
-const VideosPage = () => {
-  const { data, isLoading } = useGetVideos()
-
+const VideosPage = async () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-30% from-bg-background to-glow/20 flex flex-col">
-      <Heading />
-      <div className="container mx-auto px-4 py-12">
-        <VideoGrid videos={data} isLoading={isLoading} />
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-30% from-bg-background to-glow/20 fixed -z-10 inset-0" />
+      <div className="flex flex-col">
+        <Heading />
+        <div className="container mx-auto px-4 py-12">
+          <Suspense fallback={<VideoGridLoading />}>
+            <Videos />
+          </Suspense>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 

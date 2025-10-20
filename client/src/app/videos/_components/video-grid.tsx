@@ -5,13 +5,16 @@ import { VideoCard } from "@/app/videos/_components/video-card"
 import { VideoSkeleton } from "@/app/videos/_components/video-skeleton"
 import type { Video } from "@/app/videos/_types"
 import Button from "@/components/ui/button"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import GenerateStoryFormModal from "@/components/generate-story/generate-story-form-modal"
 import { Sparkles } from "lucide-react"
+import { CANCELLED } from "node:dns/promises"
+import { getPendingVideo } from "../_utils"
+import useCheckVideosStatus from "../_hooks/use-check-video-status"
+import { toast } from "sonner"
 
 interface VideoGridProps {
-  videos: Video[]
-  isLoading: boolean
+  initVideos: Video[]
 }
 
 const containerVariants = {
@@ -24,11 +27,23 @@ const containerVariants = {
   }
 }
 
-export function VideoGrid({ videos, isLoading }: VideoGridProps) {
-  if (isLoading) {
-    return <VideosLoading />
-  }
+export function VideoGrid({ initVideos }: VideoGridProps) {
+  const [videos, setVideos] = useState<Video[]>(initVideos)
+  const { checkVideoStatus } = useCheckVideosStatus()
 
+  useEffect(() => {
+    const handleCheckVideoSuccess = (data: Video) => {
+      setVideos((prev) =>
+        prev.map((video) => (video.id === data.id ? data : video))
+      )
+    }
+    const pendingVideo = getPendingVideo(videos)
+    if (pendingVideo) {
+      checkVideoStatus(pendingVideo.id, handleCheckVideoSuccess, () =>
+        toast.error("Something went Wrong")
+      )
+    }
+  }, [])
   if (videos.length === 0) {
     return <NoVideos />
   }
@@ -76,18 +91,5 @@ const NoVideos = () => {
       </motion.div>
       <GenerateStoryFormModal isOpen={open} onClose={() => setOpen(false)} />
     </>
-  )
-}
-
-const VideosLoading = () => {
-  return (
-    <motion.div
-      key="skeleton-wrapper"
-      className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    >
-      {[...Array(8)].map((_, i) => (
-        <VideoSkeleton key={i} />
-      ))}
-    </motion.div>
   )
 }

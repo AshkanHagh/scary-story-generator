@@ -3,20 +3,22 @@
 import { motion } from "framer-motion"
 import { Check, Sparkles } from "lucide-react"
 import Button from "@/components/ui/button"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import useCreateVideo from "../_hooks/use-create-video"
 
 interface CompleteButtonProps {
   isEnabled: boolean
-  isLoading?: boolean
 }
 
-export const CompleteButton = ({
-  isEnabled,
-  isLoading = false
-}: CompleteButtonProps) => {
+export const CompleteButton = ({ isEnabled }: CompleteButtonProps) => {
+  const router = useRouter()
+  const { createVideo, isLoading } = useCreateVideo()
+
   const { storyId } = useParams()
   const handleClick = async () => {
-    console.log(storyId)
+    createVideo(storyId as string, () => {
+      router.replace("/videos")
+    })
   }
 
   return (
