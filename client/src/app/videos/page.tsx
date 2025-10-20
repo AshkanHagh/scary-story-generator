@@ -3,6 +3,8 @@ import { Suspense } from "react"
 import VideoGridLoading from "./_components/video-grid-loading"
 import Videos from "./_components/videos"
 
+export const dynamic = "force-dynamic"
+
 const VideosPage = async () => {
   return (
     <>
