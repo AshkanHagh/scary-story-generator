@@ -25,8 +25,7 @@ import { VideoModule } from "./features/video/video.module";
             removeOnFail: true,
           },
           connection: {
-            host: dbConfig?.redis.host,
-            port: dbConfig?.redis.port,
+            url: dbConfig?.redis.url,
           },
         };
       },
