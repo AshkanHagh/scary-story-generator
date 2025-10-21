@@ -8,8 +8,9 @@ export const serverApi = ky.create({
   headers: {
     "Content-Type": "application/json"
   },
-  retry: 0,
+  timeout: 80000,
   cache: "no-store",
+  retry: 0,
   hooks: {
     beforeRequest: [
       async (request) => {
