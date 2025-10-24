@@ -112,5 +112,4 @@ This decouples phases (assets vs. video), scales heavy tasks, and handles failur
 - **Multi-Format Videos**: Support aspect ratios like 9:16 via configurable prompts/FFmpeg.
 - **Advanced Auth**: OAuth or user accounts beyond anonymous JWT.
 - **Subscriptions**: Stripe integration for limits/features.
-- **Logging/Monitoring**: Structured logs (e.g., Pino) and metrics for jobs.
 - **Horror Specialization**: Optimize prompts/context for scary themes.
