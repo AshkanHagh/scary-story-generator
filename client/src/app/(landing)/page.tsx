@@ -7,7 +7,7 @@ export default function LandingPage() {
   const subtitle = "Scary Story Generator"
   const smallText = "with AI"
   const description =
-    "Unleash your darkest imagination. Let AI craft spine-chilling tales that will haunt your dreams and keep you awake at night."
+    "Dive into the shadows of your mind. Let AI weave terrifying stories that will send shivers down your spine and linger in your thoughts long after the lights go out."
 
   return (
     <BackgroundEffects>
