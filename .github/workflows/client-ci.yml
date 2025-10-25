@@ -27,12 +27,12 @@ jobs:
         run: npm install -g pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Deploy to Vercel
         if: success()
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          pnpm install -g vercel
+          npm install -g vercel
           vercel --prod --token $VERCEL_TOKEN --confirm
