@@ -1,115 +1,42 @@
 # Scary Story Generator Backend
 
-A REST API backend that transforms user-submitted scary story scripts into AI-generated videos with images, voiceovers, and subtitles, built with NestJS, TypeScript, and BullMQ.
+Takes a user-submitted scary story script and turns it into a finished video — AI-generated images per segment, voiceover, burned-in subtitles, all assembled into one MP4. Built on NestJS with BullMQ handling the async pipeline underneath.
 
-## Introduction
+## What it does
 
-The Scary Story Generator Backend is a scalable REST API that processes user-submitted scary story scripts into AI-generated videos. It leverages NestJS for a robust server framework, BullMQ for asynchronous task management, and integrates with AI services (OpenAI for text-to-speech, Replicate for image generation) and AWS S3 for storage. The system uses a queue-driven architecture to handle computationally intensive tasks like image generation, audio synthesis, and video assembly.
-
-## Key Features
-
-- **Story Processing**: Accepts scary story scripts, generates context, and splits them into segments for AI asset creation.
-- **AI-Generated Assets**: Uses Replicate’s Flux.1 for segment images and OpenAI for voiceovers, storing in AWS S3.
-- **Video Assembly**: Downloads assets, generates dynamic frames (via worker threads), creates segment videos with FFmpeg (including subtitles), and concatenates into a final video.
-- **Queue System**: BullMQ with Redis for processing across Story, Image, Video, and Flow queues, using FlowProducer for dependency management.
-- **Authentication**: JWT-based anonymous authentication for secure access.
-- **Status Polling**: Supports polling for segment and video generation progress.
-- **Temporary File Management**: Handles disk-based processing with automatic cleanup using temporary directories.
+The whole thing runs on a queue-driven architecture because generating a video from a script is a genuinely heavy, multi-step job. A script comes in, gets split into segments, and each segment gets its own image (Replicate's Flux.1) and voiceover (OpenAI TTS), both landing in S3. Once assets exist, a separate video flow downloads them, renders subtitle-burned frames across worker threads, stitches each segment into a clip with FFmpeg, then concatenates everything into the final video. Auth is anonymous JWT — no accounts, just a token to keep access controlled — and clients poll for segment/video progress as jobs complete. Temp files live in per-job scratch directories that get cleaned up automatically, success or failure.
 
 ## Tech Stack
 
-- **Backend**: Node.js, NestJS, TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Queue System**: BullMQ (Redis-based), including FlowProducer for job flows
-- **AI Services**:
-  - OpenAI (text-to-speech for voiceovers)
-  - Replicate (Flux.1 for image generation)
-- **File Processing**:
-  - FFmpeg (video generation with subtitles)
-  - Sharp (image optimization to WebP)
-  - Piscina (worker threads for parallel frame generation)
-  - @napi-rs/canvas (frame rendering in workers)
-  - srt-parser-2 (subtitle timing from audio)
-- **Storage**: AWS S3 (@aws-sdk/client-s3)
-- **Other**: tmp-promise (temporary directories), zod (validation), jsonwebtoken (JWT), fluent-ffmpeg (FFmpeg wrapper)
+NestJS + TypeScript on Node, PostgreSQL via Drizzle ORM, BullMQ on Redis (including FlowProducer for job dependency graphs). AI: OpenAI for voice, Replicate for images. Media: FFmpeg for video/subtitles, Sharp for WebP optimization, Piscina + @napi-rs/canvas for parallel frame rendering, srt-parser-2 for subtitle timing. Storage: AWS S3. Also: zod for validation, tmp-promise for scratch dirs, jsonwebtoken for auth.
 
-## Why This Project?
+## Queue architecture
 
-This backend demonstrates expertise in scalable, AI-integrated applications with asynchronous processing. It highlights NestJS for structure, BullMQ for task orchestration, and efficient handling of video pipelines, addressing challenges like AI asset generation, frame rendering, and cloud storage.
+Three queues, dependency-chained through FlowProducer so nothing runs before its inputs exist:
 
-## Queue-Driven Architecture
+**Story queue** generates context from the script, splits it into segments, then fans out image/voice jobs per segment. `story.generate.segment.image` prompts Replicate, resizes with Sharp, uploads to S3; `story.generate.segment.voice` does the same via OpenAI for audio. Segments get marked complete as their assets land.
 
-BullMQ manages tasks across queues, with Story queue handling initial processing and Video flow (via FlowProducer) orchestrating asset downloads, frames, and assembly. Dependencies ensure ordered execution (e.g., download before frames).
+**Image queue** just pulls the finished S3 assets back down to disk — triggered as a child job once the video flow needs them.
 
-- **Story Queue (`WorkerEvents.Story`)**:
-  - **Purpose**: Generates story context, splits into segments, and creates AI assets (images/voice).
-  - **Jobs**:
-    - `story.generate.context`: Uses OpenAI to generate context, inserts segments, and queues bulk image/voice jobs.
-    - `story.generate.segment.image`: Generates image prompt from context, calls Replicate (or mock), resizes with Sharp, uploads to S3, marks segment completed.
-    - `story.generate.segment.voice`: Generates audio with OpenAI, uploads to S3, updates segment.
-  - **Flow**: User triggers segmentation → context job → bulk segment jobs for images/voices (parallel, images mark completion).
+**Video queue** does the assembly: `video.generate.segment.frame` pulls word timestamps, builds SRT subtitles, and farms frame rendering out to Piscina workers; `video.generate.video` runs FFmpeg to combine frames + audio + burned-in subtitles into a segment MP4; `video.combine.videos` concatenates all segments in order and uploads the final file.
 
-- **Image Queue (`WorkerEvents.Image`)**:
-  - **Purpose**: Downloads S3 assets to temp dirs for video processing.
-  - **Jobs**:
-    - `image.download.assets`: Fetches image/audio buffers from S3 and writes to disk.
-  - **Flow**: Triggered as child of frame jobs in video flow.
+The flow tree is rooted at `COMBINE_VIDEOS`, branching down through per-segment `GENERATE_VIDEO` → `GENERATE_SEGMENT_FRAME` → `DOWNLOAD_ASSETS`, so a segment's video can't start rendering before its frames exist, and combine can't run before every segment is done. Story assets have to be fully in S3 before the video flow even starts. Workers run at concurrency 4; Piscina grabs all available cores for frame rendering. Failures propagate up with DB status updates and temp-dir cleanup at every level.
 
-- **Video Queue (`WorkerEvents.Video`)**:
-  - **Purpose**: Frame generation, segment videos, and final concatenation.
-  - **Jobs**:
-    - `video.generate.segment.frame`: Downloads word timestamps, generates SRT subtitles, uses Piscina to parallel-generate frames (via frame-worker.js with Canvas).
-    - `video.generate.video`: FFmpeg combines frames (framerate input), audio, and subtitles (burned-in via vf filter) into MP4 segment.
-    - `video.combine.videos`: Sorts/concatenates segments (via FFmpeg concat), uploads final MP4 to S3, updates status.
-  - **Flow**: Video generation uses FlowProducer: COMBINE_VIDEOS (root) → per-segment GENERATE_VIDEO → GENERATE_SEGMENT_FRAME → DOWNLOAD_ASSETS (Image queue). TmpDirService manages shared temp dirs across jobs for cleanup.
+## Getting started
 
-**Queue Relationships**:
-- Story queue completes segments (assets in S3) before video flow starts.
-- Video flow uses Image queue for downloads, then processes in Video queue.
-- FlowProducer enforces dependencies; errors propagate with DB status updates and temp cleanup.
-- Concurrency: 4 per worker; Piscina uses all CPU cores for frames.
+```bash
+cp .env.example .env   # fill in DB, Redis, AWS creds, API keys, JWT secret
+pnpm install
+docker-compose up -d
+pnpm run db:generate
+pnpm run db:migrate
+pnpm run start:dev
+```
 
-This decouples phases (assets vs. video), scales heavy tasks, and handles failures via job events (active/completed/failed logging).
+## What's next
 
-## Getting Started
-
-### Installation
-
-1. Copy `.env.example` to `.env` and fill in required values (e.g., database URL, Redis URL, AWS credentials, API keys, JWT secret).
-
-2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-3. Start docker containers:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. Generate and run database migrations:
-   ```bash
-   pnpm run db:generate
-   pnpm run db:migrate
-   ```
-
-5. Start the application:
-   ```bash
-   pnpm run start:dev
-   ```
-
-## Challenges and Learnings
-
-- **Flow Orchestration**: Utilized BullMQ FlowProducer for video pipelines, ensuring assets are ready before frame/video jobs.
-- **Asset Generation**: Integrated Replicate/OpenAI with S3 uploads; handled production vs. mock modes.
-- **Frame & Video Sync**: Piscina for parallel frame rendering (dynamic from static images), FFmpeg for audio/subtitle integration and concatenation.
-- **Resource Management**: TmpDirService for temp dirs across job flows; error cleanup prevents disk leaks.
-- **Polling & Status**: Implemented efficient polling with max wait times for user feedback.
-
-## Future Improvements
-
-- **Retry Logic**: Add BullMQ retries for AI/FFmpeg failures.
-- **Multi-Format Videos**: Support aspect ratios like 9:16 via configurable prompts/FFmpeg.
-- **Advanced Auth**: OAuth or user accounts beyond anonymous JWT.
-- **Subscriptions**: Stripe integration for limits/features.
-- **Horror Specialization**: Optimize prompts/context for scary themes.
+- Retries for AI/FFmpeg failures (currently a hard fail)
+- 9:16 and other aspect ratios, configurable through prompts/FFmpeg
+- Real auth beyond anonymous JWT
+- Stripe for usage limits / subscriptions
+- Tuning prompts specifically for horror rather than generic story generation
