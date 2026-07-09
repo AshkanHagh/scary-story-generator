@@ -1,10 +1,7 @@
-import { IUser } from "src/drizzle/schema";
+import { User } from "src/drizzle/schemas";
 
-declare global {
-  // eslint-disable-next-line
-  namespace Express {
-    interface Request {
-      user?: IUser;
-    }
+declare module "fastify" {
+  interface FastifyRequest {
+    user?: Pick<User, "id">;
   }
 }

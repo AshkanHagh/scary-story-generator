@@ -1,15 +1,9 @@
 import { createParamDecorator, ExecutionContext } from "@nestjs/common";
-import { Request } from "express";
-import { IUser } from "src/drizzle/schema";
+import { FastifyRequest } from "fastify";
 
-export const User = createParamDecorator(
-  (user: keyof IUser | undefined, ctx: ExecutionContext) => {
-    const req = ctx.switchToHttp().getRequest<Request>();
-
-    if (!user) {
-      return req.user;
-    }
-
-    return req.user && req.user[user];
+export const UserId = createParamDecorator(
+  (_user: any, ctx: ExecutionContext) => {
+    const req = ctx.switchToHttp().getRequest<FastifyRequest>();
+    return req.user!.id;
   },
 );

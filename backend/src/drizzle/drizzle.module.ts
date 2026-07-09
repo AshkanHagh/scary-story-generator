@@ -13,8 +13,8 @@ import { Database } from "./types";
       provide: DATABASE,
       inject: [DrizzleService],
       useFactory: (drizzleService: DrizzleService): Database => {
-        // @ts-expect-error types are not matching
         return drizzle(drizzleService.pool, {
+          mode: "default",
           schema: schemas,
           casing: "snake_case",
         });

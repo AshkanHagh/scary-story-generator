@@ -8,19 +8,15 @@ export const VideoTable = mysqlTable("videos", (table) => {
   return {
     id,
     userId: table
-      .int()
-      .references(() => UserTable.id)
-      .notNull(),
+      .varchar({ length: 128 })
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
     storyId: table
-      .int()
-      .references(() => StoryTable.id)
-      .notNull(),
+      .varchar({ length: 128 })
+      .notNull()
+      .references(() => StoryTable.id, { onDelete: "cascade" }),
     url: table.text(),
-    status: mysqlEnum("video_status", [
-      "pending",
-      "failed",
-      "completed",
-    ]).notNull(),
+    status: mysqlEnum(["pending", "failed", "completed"]).notNull(),
     createdAt,
     updatedAt,
   };

@@ -8,7 +8,7 @@ export const SegmentTable = mysqlTable("segments", (table) => {
   return {
     id,
     storyId: table
-      .int()
+      .varchar({ length: 128 })
       .notNull()
       .references(() => StoryTable.id, { onDelete: "cascade" }),
     order: table.int().notNull().default(0),
@@ -17,11 +17,7 @@ export const SegmentTable = mysqlTable("segments", (table) => {
     imageId: table.text(),
     voiceId: table.text(),
     imageUrl: table.text(),
-    status: mysqlEnum("status_enum", [
-      "pending",
-      "failed",
-      "completed",
-    ]).notNull(),
+    status: mysqlEnum(["pending", "failed", "completed"]).notNull(),
     createdAt,
     updatedAt,
   };

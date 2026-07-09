@@ -8,7 +8,7 @@ export const StoryTable = mysqlTable("stories", (table) => {
   return {
     id,
     userId: table
-      .int()
+      .varchar({ length: 128 })
       .notNull()
       .references(() => UserTable.id, { onDelete: "cascade" }),
     title: table.varchar({ length: 128 }).notNull(),

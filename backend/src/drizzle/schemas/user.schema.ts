@@ -3,11 +3,9 @@ import { StoryTable } from "./story.schema";
 import { createdAt, id, updatedAt } from "../utils";
 import { mysqlTable } from "drizzle-orm/mysql-core";
 
-export const UserTable = mysqlTable("users", (table) => {
+export const UserTable = mysqlTable("users", () => {
   return {
     id,
-    isAnonymous: table.boolean().notNull().default(false),
-    token: table.text(),
     createdAt,
     updatedAt,
   };

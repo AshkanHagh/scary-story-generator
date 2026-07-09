@@ -1,23 +1,18 @@
 import { Injectable } from "@nestjs/common";
-import { IAuthService } from "./interfaces/service";
-import { RepositoryService } from "src/repository/repository.service";
-import { TokenService } from "./services/token.service";
+import { InjectDatabase } from "src/drizzle/constants";
+import { Database } from "src/drizzle/types";
+import { JwtService } from "@nestjs/jwt";
+import { UserTable } from "src/drizzle/schemas";
 
 @Injectable()
-export class AuthService implements IAuthService {
+export class AuthService {
   constructor(
-    private repo: RepositoryService,
-    private tokenService: TokenService,
+    @InjectDatabase() private db: Database,
+    private jwtService: JwtService,
   ) {}
 
-  async anonymousAuth(): Promise<string> {
-    const anonymousUser = await this.repo.user().insert({
-      isAnonymous: true,
-    });
-
-    const token = this.tokenService.sign(anonymousUser.id);
-    await this.repo.user().update(anonymousUser.id, { token });
-
-    return token;
+  async anonymousAuth() {
+    const [user] = await this.db.insert(UserTable).values({}).$returningId();
+    return await this.jwtService.signAsync({ id: user.id });
   }
 }

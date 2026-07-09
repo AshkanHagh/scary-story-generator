@@ -1,43 +1,39 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "./configs/config.module";
 import { DrizzleModule } from "./drizzle/drizzle.module";
 import { AuthModule } from "./features/auth/auth.module";
-import { RepositoryModule } from "./repository/repository.module";
-import { StoryModule } from "./features/story/story.module";
-import { LlmAgentModule } from "./features/llm-agent/llm-agent.module";
 import { BullModule } from "@nestjs/bullmq";
-import { ConfigService } from "@nestjs/config";
-import { IDbConfig } from "./configs/db.config";
-import { WorkerModule } from "./worker/worker.module";
-import { SegmentModule } from "./features/segment/segment.module";
-import { VideoModule } from "./features/video/video.module";
+import { APP_FILTER, APP_PIPE } from "@nestjs/core";
+import { ZodValidationExceptionFilter } from "./filters/zod-exception.filter";
+import { HttpExceptionFilter } from "./filters/http-exception.filter";
+import { ZodValidationPipe } from "nestjs-zod";
 
 @Module({
   imports: [
-    ConfigModule.register(),
-    BullModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const dbConfig = config.get<IDbConfig>("db");
-        return {
-          defaultJobOptions: {
-            removeOnComplete: true,
-            removeOnFail: true,
-          },
-          connection: {
-            url: dbConfig?.redis.url,
-          },
-        };
+    BullModule.forRoot({
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+      connection: {
+        url: process.env.REDIS_URL!,
       },
     }),
     DrizzleModule,
     AuthModule,
-    RepositoryModule,
-    StoryModule,
-    LlmAgentModule,
-    WorkerModule,
-    SegmentModule,
-    VideoModule,
+  ],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useClass: ZodValidationPipe,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ZodValidationExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
   ],
 })
 export class AppModule {}

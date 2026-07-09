@@ -1,21 +1,19 @@
 import { Module } from "@nestjs/common";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { ConfigModule } from "src/configs/config.module";
-import { RepositoryModule } from "src/repository/repository.module";
-import { TokenService } from "./services/token.service";
-import { AnonymousJwtStrategy } from "./strategies/anonymous-jwt.strategy";
-import { AnonymousAuthGuard } from "./guards/anonymous-auth.guard";
+import { AnonymousAuthGuard } from "./guards/auth.guard";
+import { JwtModule } from "@nestjs/jwt";
+import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
-  imports: [RepositoryModule],
-  controllers: [AuthController],
-  providers: [
-    AuthService,
-    TokenService,
-    AnonymousJwtStrategy,
-    AnonymousAuthGuard,
+  imports: [
+    JwtModule.register({
+      global: true,
+      secret: process.env.AUTH_TOKEN_SECRET!,
+    }),
   ],
-  exports: [AnonymousAuthGuard, AnonymousJwtStrategy],
+  controllers: [AuthController],
+  providers: [AuthService, AnonymousAuthGuard, JwtStrategy],
+  exports: [AnonymousAuthGuard],
 })
 export class AuthModule {}

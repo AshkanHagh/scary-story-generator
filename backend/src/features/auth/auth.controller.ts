@@ -1,10 +1,9 @@
 import { Controller, Post } from "@nestjs/common";
-import { IAuthController } from "./interfaces/controller";
 import { AuthService } from "./auth.service";
 import { AnonymousAuthResponse } from "./types";
 
 @Controller("auth")
-export class AuthController implements IAuthController {
+export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post("/anonymous")
