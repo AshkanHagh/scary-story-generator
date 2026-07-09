@@ -1,16 +1,24 @@
+import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
-import { StoryExceptionFilter } from "./filter/exception-filter";
-import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from "@nestjs/platform-fastify";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  );
 
-  app.setGlobalPrefix("/api/v1");
-  app.useGlobalFilters(new StoryExceptionFilter());
-  app.enableCors(<CorsOptions>{
+  await app.register(import("@fastify/helmet"));
+  await app.register(import("@fastify/csrf-protection"));
+  app.enableCors({
     origin: process.env.CORS_ORIGIN || "*",
   });
+  app.setGlobalPrefix("api");
+  app.enableShutdownHooks();
 
   await app.listen(process.env.PORT ?? 3000, "0.0.0.0");
 }

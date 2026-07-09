@@ -1,26 +1,23 @@
-import { Module } from "@nestjs/common";
-import { DATABASE } from "./constant";
-import { Pool } from "pg";
-import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "./schema";
-import { ConfigService } from "@nestjs/config";
-import { IDbConfig } from "src/configs/db.config";
+import { Global, Module } from "@nestjs/common";
+import { DrizzleService } from "./drizzle.service";
+import { DATABASE } from "./constants";
+import { drizzle } from "drizzle-orm/mysql2";
+import * as schemas from "./schemas";
+import { Database } from "./types";
 
+@Global()
 @Module({
   providers: [
+    DrizzleService,
     {
       provide: DATABASE,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const dbConfig = config.get<IDbConfig>("db");
-
-        const pool = new Pool({
-          connectionString: dbConfig?.postgres.url,
-          max: 5,
-          ssl: process.env.NODE_ENV === "production",
+      inject: [DrizzleService],
+      useFactory: (drizzleService: DrizzleService): Database => {
+        // @ts-expect-error types are not matching
+        return drizzle(drizzleService.pool, {
+          schema: schemas,
+          casing: "snake_case",
         });
-
-        return drizzle(pool, { schema, casing: "snake_case" });
       },
     },
   ],

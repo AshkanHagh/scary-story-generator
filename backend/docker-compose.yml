@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql
+    restart: no
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-admin}
+      MYSQL_DATABASE: ${DATABASE_NAME:-scary-story-generator}
+      MYSQL_USER: ${DATABASE_USER:-admin}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:-admin}
+    ports:
+      - 3306:3306
+
+  s3:
+    image: rustfs/rustfs:latest
+    restart: no
+    environment:
+      RUSTFS_ADDRESS: "0.0.0.0:9000"
+      RUSTFS_CONSOLE_ADDRESS: "0.0.0.0:9001"
+      RUSTFS_CONSOLE_ENABLE: true
+      RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS: "*"
+      RUSTFS_ACCESS_KEY: ${AWS_S3_ACCESS_KEY:-admin}
+      RUSTFS_SECRET_KEY: ${AWS_S3_SECRET_KEY:-admin}
+    ports:
+      - 9000:9000
+      - 9001:9001
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379

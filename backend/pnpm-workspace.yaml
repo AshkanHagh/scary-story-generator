@@ -1,0 +1,5 @@
+allowBuilds:
+  '@sentry/node-cpu-profiler': true
+  '@swc/core': true
+  esbuild: true
+  msgpackr-extract: true

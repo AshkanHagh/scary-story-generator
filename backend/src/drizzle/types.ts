@@ -1,4 +1,7 @@
-import { NodePgDatabase } from "drizzle-orm/node-postgres";
-import * as schema from "./schema";
+import * as schema from "./schemas";
+import { MySql2Database } from "drizzle-orm/mysql2";
+import { Pool } from "mysql2/promise";
 
-export type Database = NodePgDatabase<typeof schema>;
+export type Database = MySql2Database<typeof schema> & {
+  $client: Pool;
+};
