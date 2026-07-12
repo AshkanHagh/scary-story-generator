@@ -8,41 +8,38 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ISegmentController } from "./interfaces/controller";
 import { SegmentService } from "./segment.service";
-import { AnonymousAuthGuard } from "../auth/guards/anonymous-auth.guard";
-import { User } from "../auth/decorators/user.decorator";
-import { ISegment } from "src/drizzle/schema";
-import { PollSegmentsStatusResponse } from "./types";
+import { AnonymousAuthGuard } from "../auth/guards/auth.guard";
+import { UserId } from "../auth/decorators/user.decorator";
 
 @Controller("segments")
 @UseGuards(AnonymousAuthGuard)
-export class SegmentController implements ISegmentController {
+export class SegmentController {
   constructor(private segmentService: SegmentService) {}
 
-  @Post("/:story_id")
+  @Post(":story_id")
   @HttpCode(HttpStatus.NO_CONTENT)
   async generateSegment(
-    @User("id") userId: string,
+    @UserId() userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<void> {
+  ) {
     await this.segmentService.generateSegment(userId, storyId);
     return;
   }
 
-  @Get("/:story_id")
+  @Get(":story_id")
   async getSegments(
-    @User("id") userId: string,
+    @UserId() userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<ISegment[]> {
-    return this.segmentService.getSegments(userId, storyId);
+  ) {
+    return await this.segmentService.getSegments(userId, storyId);
   }
 
-  @Get("/:story_id/status")
+  @Get(":story_id/status")
   async pollSegmentStatus(
-    @User("id") userId: string,
+    @UserId() userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<PollSegmentsStatusResponse> {
-    return this.segmentService.pollSegmentStatus(userId, storyId);
+  ) {
+    return await this.segmentService.pollSegmentStatus(userId, storyId);
   }
 }

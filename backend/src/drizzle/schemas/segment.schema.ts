@@ -14,8 +14,6 @@ export const SegmentTable = mysqlTable("segments", (table) => {
     order: table.int().notNull().default(0),
     text: table.text().notNull(),
     prompt: table.text(),
-    imageId: table.text(),
-    voiceId: table.text(),
     imageUrl: table.text(),
     status: mysqlEnum(["pending", "failed", "completed"]).notNull(),
     createdAt,

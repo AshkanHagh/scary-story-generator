@@ -6,6 +6,8 @@ import { APP_FILTER, APP_PIPE } from "@nestjs/core";
 import { ZodValidationExceptionFilter } from "./filters/zod-exception.filter";
 import { HttpExceptionFilter } from "./filters/http-exception.filter";
 import { ZodValidationPipe } from "nestjs-zod";
+import { AssetsModule } from "./features/assets/assets.module";
+import { SegmentModule } from "./features/segment/segment.module";
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { ZodValidationPipe } from "nestjs-zod";
     }),
     DrizzleModule,
     AuthModule,
+    AssetsModule,
+    SegmentModule,
   ],
   providers: [
     {

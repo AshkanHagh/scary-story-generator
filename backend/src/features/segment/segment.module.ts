@@ -1,26 +1,25 @@
 import { Module } from "@nestjs/common";
 import { SegmentController } from "./segment.controller";
 import { AuthModule } from "../auth/auth.module";
-import { RepositoryModule } from "src/repository/repository.module";
-import { BullModule } from "@nestjs/bullmq";
-import { WorkerEvents } from "src/worker/event";
 import { SegmentService } from "./segment.service";
-import { SegmentUtilService } from "./util.service";
-import { StoryModule } from "../story/story.module";
-import { LlmAgentModule } from "../llm-agent/llm-agent.module";
+import { LlmModule } from "../llm/llm.module";
+import { BullModule } from "@nestjs/bullmq";
+import { SEGMENT_FLOW_PRODUCER, SEGMENT_QUEUE } from "./constants";
+import { AssetsModule } from "../assets/assets.module";
 
 @Module({
   imports: [
     AuthModule,
-    RepositoryModule,
-    StoryModule,
-    LlmAgentModule,
+    LlmModule,
+    AssetsModule,
     BullModule.registerQueue({
-      name: WorkerEvents.Story,
+      name: SEGMENT_QUEUE,
+    }),
+    BullModule.registerFlowProducer({
+      name: SEGMENT_FLOW_PRODUCER,
     }),
   ],
-  providers: [SegmentService, SegmentUtilService],
+  providers: [SegmentService],
   controllers: [SegmentController],
-  exports: [SegmentUtilService],
 })
 export class SegmentModule {}
