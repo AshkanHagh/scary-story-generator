@@ -7,33 +7,26 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { IStoryController } from "./interfaces/controller";
-import { CreateStoryDto, CreateStorySchema } from "./dtos";
 import { StoryService } from "./story.service";
-import { User } from "../auth/decorators/user.decorator";
-import { ZodValidationPipe } from "src/utils/zod.validation";
-import { AnonymousAuthGuard } from "../auth/guards/anonymous-auth.guard";
-import { IStory } from "src/drizzle/schema";
+import { AnonymousAuthGuard } from "../auth/guards/auth.guard";
+import { UserId } from "../auth/decorators/user.decorator";
+import { CreateStoryDto } from "./dtos";
 
 @Controller("stories")
 @UseGuards(AnonymousAuthGuard)
-export class StoryController implements IStoryController {
+export class StoryController {
   constructor(private storyService: StoryService) {}
 
-  @Post("/")
-  async createStory(
-    @User("id") userId: string,
-    @Body(new ZodValidationPipe(CreateStorySchema)) payload: CreateStoryDto,
-  ): Promise<IStory> {
-    const story = await this.storyService.createStory(userId, payload);
-    return story;
+  @Post("")
+  async create(@UserId() userId: string, @Body() payload: CreateStoryDto) {
+    return await this.storyService.create(userId, payload);
   }
 
-  @Get("/:story_id")
-  async getStory(
-    @User("id") userId: string,
-    @Param("story_id", new ParseUUIDPipe()) storyId: string,
-  ): Promise<IStory> {
-    return this.storyService.getStory(userId, storyId);
+  @Get(":id")
+  async get(
+    @UserId() userId: string,
+    @Param("id", new ParseUUIDPipe()) storyId: string,
+  ) {
+    return await this.storyService.get(userId, storyId);
   }
 }

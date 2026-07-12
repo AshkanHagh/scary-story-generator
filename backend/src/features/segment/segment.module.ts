@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { SegmentController } from "./segment.controller";
-import { AuthModule } from "../auth/auth.module";
 import { SegmentService } from "./segment.service";
 import { LlmModule } from "../llm/llm.module";
 import { BullModule } from "@nestjs/bullmq";
@@ -9,7 +8,6 @@ import { AssetsModule } from "../assets/assets.module";
 
 @Module({
   imports: [
-    AuthModule,
     LlmModule,
     AssetsModule,
     BullModule.registerQueue({

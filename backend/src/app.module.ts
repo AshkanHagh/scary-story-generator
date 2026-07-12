@@ -8,6 +8,7 @@ import { HttpExceptionFilter } from "./filters/http-exception.filter";
 import { ZodValidationPipe } from "nestjs-zod";
 import { AssetsModule } from "./features/assets/assets.module";
 import { SegmentModule } from "./features/segment/segment.module";
+import { StoryModule } from "./features/story/story.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SegmentModule } from "./features/segment/segment.module";
     AuthModule,
     AssetsModule,
     SegmentModule,
+    StoryModule,
   ],
   providers: [
     {
