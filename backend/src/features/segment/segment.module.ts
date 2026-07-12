@@ -5,6 +5,7 @@ import { LlmModule } from "../llm/llm.module";
 import { BullModule } from "@nestjs/bullmq";
 import { SEGMENT_FLOW_PRODUCER, SEGMENT_QUEUE } from "./constants";
 import { AssetsModule } from "../assets/assets.module";
+import { SegmentWorker } from "./segment.processor";
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { AssetsModule } from "../assets/assets.module";
       name: SEGMENT_FLOW_PRODUCER,
     }),
   ],
-  providers: [SegmentService],
+  providers: [SegmentService, SegmentWorker],
   controllers: [SegmentController],
 })
 export class SegmentModule {}

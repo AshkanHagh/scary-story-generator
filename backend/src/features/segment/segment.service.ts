@@ -54,14 +54,16 @@ export class SegmentService {
         },
         children: [
           {
+            name: "video-generate-audio",
+            queueName: "video",
+          },
+          {
             name: "story-generate-context",
             queueName: "story",
-            children: [
-              {
-                name: "video-generate-audio",
-                queueName: "video",
-              },
-            ],
+            data: {
+              storyId,
+              story: story.script,
+            },
           },
         ],
       });
