@@ -1,3 +1,4 @@
+import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { Injectable } from "@nestjs/common";
 import { Pollinations } from "@pollinations/sdk";
 import { StoryError, StoryErrorType } from "src/filters/exception";
@@ -5,11 +6,15 @@ import { StoryError, StoryErrorType } from "src/filters/exception";
 @Injectable()
 export class LlmService {
   private client: Pollinations;
+  private ttsClient: ElevenLabsClient;
 
   constructor() {
     this.client = new Pollinations({
       apiKey: process.env.POLLINATIONS_API_KEY,
       maxRetries: 3,
+    });
+    this.ttsClient = new ElevenLabsClient({
+      apiKey: process.env.ELEVENLABS_API_KEY,
     });
   }
 
@@ -48,7 +53,7 @@ export class LlmService {
           Only return the final image prompt. No extra explanation or metadata.
         `,
         private: true,
-        model: "openai",
+        model: "qwen-safety",
       });
     } catch (error) {
       throw new StoryError(StoryErrorType.IMAGE_GENERATION_FAILED, error);
@@ -61,7 +66,7 @@ export class LlmService {
         systemPrompt:
           "You're a professional visual scene designer. Based on the segment of a story provided, and an overall visual context, generate a detailed and vivid text-to-image prompt. The output should describe the visual elements of the scene clearly, including characters, setting, emotions, lighting, and overall mood. Use a photorealistic style unless specified otherwise. Keep it concise, but rich in imagery. Do not include any commentary or explanation. Just output the prompt.",
         private: true,
-        model: "openai",
+        model: "qwen-safety",
       });
     } catch (error) {
       throw new StoryError(StoryErrorType.CONTEXT_GENERATION_FAILED, error);
@@ -70,10 +75,17 @@ export class LlmService {
 
   async generateAudio(story: string) {
     try {
-      const voice = await this.client.audioSpeech(story, {
-        voice: "onyx",
-      });
-      return voice.buffer;
+      const audio = await this.ttsClient.textToSpeech.convert(
+        process.env.ELEVENLABS_VOICE_ID!,
+        {
+          text: story,
+        },
+      );
+      const arrayBuffer = await new Response(audio).arrayBuffer();
+      return {
+        buffer: arrayBuffer,
+        contentType: "audio/mpeg",
+      };
     } catch (error) {
       throw new StoryError(StoryErrorType.CONTEXT_GENERATION_FAILED, error);
     }

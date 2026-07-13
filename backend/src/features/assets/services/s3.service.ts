@@ -70,22 +70,24 @@ export class S3Service implements OnModuleInit {
   }
 
   async putObject(
+    prefix: string,
     id: string,
     mimeType: string,
     buffer: Buffer,
     temp: boolean = true,
   ) {
     try {
+      const fileKey = `${prefix}/${id}`;
       await this.client.send(
         new PutObjectCommand({
           Bucket: this.bucketName,
-          Key: id,
+          Key: `${prefix}/${id}`,
           Body: buffer,
           ContentType: mimeType,
           Tagging: temp ? "temp=true" : "temp=false",
         }),
       );
-      const url = `${this.endpoint}/${this.bucketName}/${id}`;
+      const url = `${this.endpoint}/${this.bucketName}/${fileKey}`;
       return url;
     } catch (error: unknown) {
       throw new StoryError(StoryErrorType.S3_REQ_FAILED, error);

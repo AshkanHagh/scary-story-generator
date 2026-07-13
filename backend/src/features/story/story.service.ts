@@ -12,11 +12,16 @@ export class StoryService {
   constructor(@InjectDatabase() private db: Database) {}
 
   async create(userId: string, payload: CreateStoryDto) {
-    const [story] = await this.db.insert(StoryTable).values({
-      ...payload,
-      userId,
+    const [story] = await this.db
+      .insert(StoryTable)
+      .values({
+        ...payload,
+        userId,
+      })
+      .$returningId();
+    return await this.db.query.StoryTable.findFirst({
+      where: eq(StoryTable.id, story.id),
     });
-    return story;
   }
 
   async get(userId: string, storyId: string) {

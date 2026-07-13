@@ -7,6 +7,7 @@ export enum StoryErrorType {
   PERMISSION_DENIED = "PERMISSION_DENIED",
   NOT_COMPLETED = "NOT_COMPLETED",
   S3_REQ_FAILED = "S3_REQ_FAILED",
+  QUOTA_LIMIT_REACHED = "QUOTA_LIMIT_REACHED",
   IMAGE_GENERATION_FAILED = "IMAGE_GENERATION_FAILED",
   AUDIO_GENERATION_FAILED = "AUDIO_GENERATION_FAILED",
   ASSETS_DOWNLOAD_FAIELD = "ASSETS_DOWNLOAD_FAIELD",
@@ -29,6 +30,9 @@ export class StoryError extends HttpException {
 
   getStatus(): number {
     switch (this.type) {
+      case StoryErrorType.QUOTA_LIMIT_REACHED: {
+        return HttpStatus.FORBIDDEN;
+      }
       default: {
         return HttpStatus.INTERNAL_SERVER_ERROR;
       }

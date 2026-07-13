@@ -10,7 +10,8 @@ import { SegmentTable, StoryTable } from "src/drizzle/schemas";
 import { randomUUID } from "node:crypto";
 import { StoryError, StoryErrorType } from "src/filters/exception";
 
-@Processor(SEGMENT_QUEUE, { concurrency: 5 })
+// using 1 concurrency to limit the ai usage
+@Processor(SEGMENT_QUEUE, { concurrency: 1 })
 export class SegmentWorker extends WorkerHost {
   constructor(
     @InjectDatabase() private db: Database,
@@ -21,11 +22,16 @@ export class SegmentWorker extends WorkerHost {
   }
 
   async process(job: Job) {
-    switch (job.name) {
-      case "segment-generate-image": {
-        await this.generateImage(job.data);
-        break;
+    try {
+      switch (job.name) {
+        case "segment-generate-image": {
+          await this.generateImage(job.data);
+          break;
+        }
       }
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
   }
 
@@ -46,6 +52,7 @@ export class SegmentWorker extends WorkerHost {
       );
       const image = await this.llmService.genSegmentImage(imagePrompt);
       const imageUrl = await this.s3Service.putObject(
+        payload.storyId,
         imageId,
         image.contentType,
         Buffer.from(image.buffer),

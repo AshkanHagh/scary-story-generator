@@ -2,12 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { InjectFlowProducer } from "@nestjs/bullmq";
 import { FlowChildJob, FlowProducer } from "bullmq";
 import { pollUntil } from "src/utils/poll";
-import { SEGMENT_QUEUE } from "./constants";
+import { SEGMENT_FLOW_PRODUCER, SEGMENT_QUEUE } from "./constants";
 import { InjectDatabase } from "src/drizzle/constants";
 import { Database } from "src/drizzle/types";
 import { and, eq } from "drizzle-orm";
 import { Segment, SegmentTable, StoryTable } from "src/drizzle/schemas";
 import { StoryError, StoryErrorType } from "src/filters/exception";
+import { QuotaService } from "../llm/quota.service";
 
 export type PollSegmentsStatus = {
   segments: Segment[];
@@ -18,8 +19,11 @@ export type PollSegmentsStatus = {
 @Injectable()
 export class SegmentService {
   constructor(
-    @InjectFlowProducer(SEGMENT_QUEUE) private segmentQueue: FlowProducer,
-    @InjectDatabase() private db: Database,
+    @InjectFlowProducer(SEGMENT_FLOW_PRODUCER)
+    private segmentQueue: FlowProducer,
+    @InjectDatabase()
+    private db: Database,
+    private quotaService: QuotaService,
   ) {}
 
   async generateSegment(userId: string, storyId: string) {
@@ -29,8 +33,14 @@ export class SegmentService {
     if (!story) {
       throw new StoryError(StoryErrorType.NOT_FOUND);
     }
+
     const segments = story.script.split(/\n{2,}/);
     const segmentJobs: FlowChildJob[] = [];
+    await this.quotaService.consume({
+      stories: 1,
+      images: segments.length,
+      voiceChars: story.script.length,
+    });
 
     const promise = segments.map(async (text, index) => {
       const [segment] = await this.db
@@ -43,19 +53,31 @@ export class SegmentService {
         })
         .$returningId();
 
-      // each children job will be checked in db is completed or not to prevent duplicate assets
       segmentJobs.push({
-        name: "segment-geneate-image",
+        name: "segment-generate-image",
         queueName: SEGMENT_QUEUE,
         data: {
           storyId,
           segmentId: segment.id,
           text,
         },
+      });
+    });
+    await Promise.all(promise);
+    await this.segmentQueue.addBulk([
+      ...segmentJobs,
+      // using a fake queue to finish audio/context, could just use the last segment job
+      {
+        name: "last-random-job",
+        queueName: "random-queue",
         children: [
           {
-            name: "video-generate-audio",
-            queueName: "video",
+            name: "story-generate-audio",
+            queueName: "story",
+            data: {
+              storyId,
+              story: story.script,
+            },
           },
           {
             name: "story-generate-context",
@@ -66,10 +88,8 @@ export class SegmentService {
             },
           },
         ],
-      });
-    });
-    await Promise.all(promise);
-    await this.segmentQueue.addBulk(segmentJobs);
+      },
+    ]);
   }
 
   async getSegments(userId: string, storyId: string) {
@@ -93,18 +113,16 @@ export class SegmentService {
     const story = await this.db.query.StoryTable.findFirst({
       where: and(eq(StoryTable.id, storyId), eq(StoryTable.userId, userId)),
       with: {
-        segments: true,
+        segments: {
+          where: eq(SegmentTable.status, "completed"),
+        },
       },
     });
     if (!story) {
       throw new StoryError(StoryErrorType.NOT_FOUND);
     }
-    const initialSegments = await this.db.query.SegmentTable.findMany({
-      where: and(
-        eq(SegmentTable.storyId, storyId),
-        eq(SegmentTable.status, "completed"),
-      ),
-    });
+
+    const initialSegments = story.segments;
 
     const fetchFn = async () => {
       const segments = await this.db.query.SegmentTable.findMany({
