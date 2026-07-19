@@ -1,2 +1,5 @@
-export const SEGMENT_FLOW_PRODUCER = "SEGMENT_FLOW_PRODUCER";
-export const SEGMENT_QUEUE = "SEGMENT_QUEUE";
+export const SEGMENT_QUEUES = {
+  SPEACH: "segment-speach",
+  IMAGE: "segment-image",
+  FINALIZE: "segment-finalize",
+} as const;

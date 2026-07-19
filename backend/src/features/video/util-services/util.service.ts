@@ -33,50 +33,6 @@ export class VideoUtilService implements OnModuleDestroy {
     });
   }
 
-  async generateSegmentFrames(
-    segmentId: string,
-    imagePath: string,
-    audioPath: string,
-    srtPath: string,
-    frameDir: string,
-    tmpDirService: TmpDirService,
-  ) {
-    try {
-      const wordTiming = await this.storyAgent.getWordTimestamps(audioPath);
-      await generateSRTFile(wordTiming, srtPath);
-
-      const audioDuration = wordTiming[wordTiming.length - 1].end;
-      const extraPaddingSeconds = 2;
-      const frameCount = Math.ceil(
-        (audioDuration + extraPaddingSeconds) * VIDEO_FRAME_RATE,
-      );
-
-      const framePromises = [];
-      for (let i = 0; i < frameCount; i++) {
-        const jobData: GenerateFrameWorker = {
-          frameIndex: i,
-          imagePath,
-          outputDir: frameDir,
-        };
-
-        // @ts-expect-error any value
-        framePromises.push(this.piscina.run(jobData));
-      }
-
-      const results = await Promise.allSettled(framePromises);
-      const errors = results.filter((result) => result.status === "rejected");
-      // TODO: write errors in file
-      if (errors.length > 0) {
-        throw new Error(
-          `generate segment ${segmentId} failed: ${errors[0].reason}`,
-        );
-      }
-    } catch (error) {
-      await tmpDirService.cleanup();
-      throw new StoryError(StoryErrorType.VideoGenerationFailed, error);
-    }
-  }
-
   // downloads image/audio and write them into tmp dir on disk
   async downloadAssets(
     imageId: string,

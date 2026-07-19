@@ -1,24 +1,13 @@
 import { Module } from "@nestjs/common";
 import { SegmentController } from "./segment.controller";
 import { SegmentService } from "./segment.service";
-import { LlmModule } from "../llm/llm.module";
-import { BullModule } from "@nestjs/bullmq";
-import { SEGMENT_FLOW_PRODUCER, SEGMENT_QUEUE } from "./constants";
-import { AssetsModule } from "../assets/assets.module";
-import { SegmentWorker } from "./segment.processor";
+import { AiModule } from "../ai/ai.module";
+import { StorageModule } from "../storage/storage.module";
+import { SegmentProcessor } from "./segment.processor";
 
 @Module({
-  imports: [
-    LlmModule,
-    AssetsModule,
-    BullModule.registerQueue({
-      name: SEGMENT_QUEUE,
-    }),
-    BullModule.registerFlowProducer({
-      name: SEGMENT_FLOW_PRODUCER,
-    }),
-  ],
-  providers: [SegmentService, SegmentWorker],
+  imports: [AiModule, StorageModule],
+  providers: [SegmentService, SegmentProcessor],
   controllers: [SegmentController],
 })
 export class SegmentModule {}

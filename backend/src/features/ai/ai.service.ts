@@ -1,12 +1,16 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Pollinations } from "@pollinations/sdk";
+import { AssemblyAI } from "assemblyai";
+import pRetry from "p-retry";
 import { StoryError, StoryErrorType } from "src/filters/exception";
 
 @Injectable()
-export class LlmService {
+export class AiService {
+  private logger = new Logger(AiService.name);
   private client: Pollinations;
   private ttsClient: ElevenLabsClient;
+  private subClient: AssemblyAI;
 
   constructor() {
     this.client = new Pollinations({
@@ -15,6 +19,9 @@ export class LlmService {
     });
     this.ttsClient = new ElevenLabsClient({
       apiKey: process.env.ELEVENLABS_API_KEY,
+    });
+    this.subClient = new AssemblyAI({
+      apiKey: process.env.ASSEMBLY_AI_TOKEN!,
     });
   }
 
@@ -30,7 +37,7 @@ export class LlmService {
         guidanceScale: 7,
       });
     } catch (error) {
-      throw new StoryError(StoryErrorType.IMAGE_GENERATION_FAILED, error);
+      throw new StoryError(StoryErrorType.AI_REQ_FAILED, error);
     }
   }
 
@@ -56,38 +63,62 @@ export class LlmService {
         model: "qwen-safety",
       });
     } catch (error) {
-      throw new StoryError(StoryErrorType.IMAGE_GENERATION_FAILED, error);
+      throw new StoryError(StoryErrorType.AI_REQ_FAILED, error);
     }
   }
 
   async genStoryContext(story: string) {
     try {
-      return await this.client.text(story, {
-        systemPrompt:
-          "You're a professional visual scene designer. Based on the segment of a story provided, and an overall visual context, generate a detailed and vivid text-to-image prompt. The output should describe the visual elements of the scene clearly, including characters, setting, emotions, lighting, and overall mood. Use a photorealistic style unless specified otherwise. Keep it concise, but rich in imagery. Do not include any commentary or explanation. Just output the prompt.",
-        private: true,
-        model: "qwen-safety",
-      });
+      return await pRetry(
+        async () => {
+          return await this.client.text(story, {
+            systemPrompt:
+              "You're a professional visual scene designer. Based on the segment of a story provided, and an overall visual context, generate a detailed and vivid text-to-image prompt. The output should describe the visual elements of the scene clearly, including characters, setting, emotions, lighting, and overall mood. Use a photorealistic style unless specified otherwise. Keep it concise, but rich in imagery. Do not include any commentary or explanation. Just output the prompt.",
+            private: true,
+            model: "qwen-safety",
+          });
+        },
+        {
+          retries: 3,
+          onFailedAttempt: (err) =>
+            this.logger.warn(`Gen Context attempt ${err.attemptNumber} failed`),
+        },
+      );
     } catch (error) {
-      throw new StoryError(StoryErrorType.CONTEXT_GENERATION_FAILED, error);
+      throw new StoryError(StoryErrorType.AI_REQ_FAILED, error);
     }
   }
 
-  async generateAudio(story: string) {
+  async genSpeach(story: string) {
     try {
-      const audio = await this.ttsClient.textToSpeech.convert(
+      const speach = await this.ttsClient.textToSpeech.convert(
         process.env.ELEVENLABS_VOICE_ID!,
         {
           text: story,
         },
       );
-      const arrayBuffer = await new Response(audio).arrayBuffer();
+      const speachBuff = Buffer.from(await new Response(speach).arrayBuffer());
+      const transcript = await this.subClient.transcripts.transcribe({
+        audio: speachBuff,
+        speech_models: ["universal-2"],
+      });
+      const subtitleSrt = await this.subClient.transcripts.subtitles(
+        transcript.id,
+        "srt",
+      );
+
       return {
-        buffer: arrayBuffer,
-        contentType: "audio/mpeg",
+        speach: {
+          buffer: speachBuff,
+          contentType: "audio/mpeg",
+        },
+        subtitle: {
+          text: subtitleSrt,
+          contentType: "application/x-subrip",
+        },
       };
     } catch (error) {
-      throw new StoryError(StoryErrorType.CONTEXT_GENERATION_FAILED, error);
+      throw new StoryError(StoryErrorType.AI_REQ_FAILED, error);
     }
   }
 }

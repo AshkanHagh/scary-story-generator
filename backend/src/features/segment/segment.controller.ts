@@ -6,11 +6,13 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Req,
   UseGuards,
 } from "@nestjs/common";
 import { SegmentService } from "./segment.service";
 import { AnonymousAuthGuard } from "../auth/guards/auth.guard";
 import { UserId } from "../auth/decorators/user.decorator";
+import { FastifyRequest } from "fastify";
 
 @Controller("segments")
 @UseGuards(AnonymousAuthGuard)
@@ -20,10 +22,11 @@ export class SegmentController {
   @Post(":story_id")
   @HttpCode(HttpStatus.NO_CONTENT)
   async generateSegment(
+    @Req() req: FastifyRequest,
     @UserId() userId: string,
     @Param("story_id", new ParseUUIDPipe()) storyId: string,
   ) {
-    await this.segmentService.generateSegment(userId, storyId);
+    await this.segmentService.generateSegment(req, userId, storyId);
     return;
   }
 

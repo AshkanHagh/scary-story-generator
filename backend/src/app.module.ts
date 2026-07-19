@@ -1,29 +1,49 @@
 import { Module } from "@nestjs/common";
 import { DrizzleModule } from "./drizzle/drizzle.module";
 import { AuthModule } from "./features/auth/auth.module";
-import { BullModule } from "@nestjs/bullmq";
 import { APP_FILTER, APP_PIPE } from "@nestjs/core";
 import { ZodValidationExceptionFilter } from "./filters/zod-exception.filter";
 import { HttpExceptionFilter } from "./filters/http-exception.filter";
 import { ZodValidationPipe } from "nestjs-zod";
-import { AssetsModule } from "./features/assets/assets.module";
 import { SegmentModule } from "./features/segment/segment.module";
 import { StoryModule } from "./features/story/story.module";
+import { LoggerModule } from "nestjs-pino";
+import { stdSerializers } from "pino";
+import { QueueModule } from "./queue/queue.module";
+import { StorageModule } from "./features/storage/storage.module";
+import { AiModule } from "./features/ai/ai.module";
 
 @Module({
   imports: [
-    BullModule.forRoot({
-      defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: true,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: true,
+        customSuccessMessage: (req, res) =>
+          `method=${req.method} url=${req.url} status_code=${res.statusCode}`,
+        serializers: {
+          req: () => undefined,
+          res: () => undefined,
+          err: stdSerializers.err,
+        },
+        transport: {
+          target: "pino-pretty",
+          options: {
+            colorize: false,
+            ignore: "pid,hostname,context,responseTime",
+            translateTime: "HH:MM:ss",
+            errorLikeObjectKeys: ["err"],
+            errorProps: "*",
+            singleLine: true,
+          },
+        },
       },
-      connection: {
-        url: process.env.REDIS_URL!,
-      },
+      forRoutes: ["*path"],
     }),
+    QueueModule,
     DrizzleModule,
     AuthModule,
-    AssetsModule,
+    StorageModule,
+    AiModule,
     SegmentModule,
     StoryModule,
   ],
@@ -34,11 +54,11 @@ import { StoryModule } from "./features/story/story.module";
     },
     {
       provide: APP_FILTER,
-      useClass: ZodValidationExceptionFilter,
+      useClass: HttpExceptionFilter,
     },
     {
       provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
+      useClass: ZodValidationExceptionFilter,
     },
   ],
 })

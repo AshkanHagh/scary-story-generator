@@ -1,73 +1,92 @@
-import { Processor, WorkerHost } from "@nestjs/bullmq";
-import { SEGMENT_QUEUE } from "./constants";
+import { Processor } from "@nestjs/bullmq";
+import { SEGMENT_QUEUES } from "./constants";
 import { Job } from "bullmq";
 import { InjectDatabase } from "src/drizzle/constants";
 import { Database } from "src/drizzle/types";
-import { LlmService } from "../llm/llm.service";
-import { S3Service } from "../assets/services/s3.service";
 import { eq } from "drizzle-orm";
-import { SegmentTable, StoryTable } from "src/drizzle/schemas";
+import { SegmentTable, Story } from "src/drizzle/schemas";
 import { randomUUID } from "node:crypto";
-import { StoryError, StoryErrorType } from "src/filters/exception";
+import { AiService } from "../ai/ai.service";
+import { StorageService } from "../storage/storage.service";
+import storageKey from "src/utils/storage-key";
+import { Logger } from "@nestjs/common";
+import { BaseProcessor, QueueJob } from "src/queue/base-queue";
+import { SEGMENT_QUEUE } from "src/queue/constants";
 
-// using 1 concurrency to limit the ai usage
-@Processor(SEGMENT_QUEUE, { concurrency: 1 })
-export class SegmentWorker extends WorkerHost {
+export type GenSpeachJob = {
+  storyId: string;
+  script: string;
+};
+
+export type GenSegmentImage = {
+  story: Story;
+  segmentId: string;
+  text: string;
+};
+
+@Processor(SEGMENT_QUEUE)
+export class SegmentProcessor extends BaseProcessor {
+  protected logger = new Logger(SegmentProcessor.name);
+
   constructor(
     @InjectDatabase() private db: Database,
-    private llmService: LlmService,
-    private s3Service: S3Service,
+    private aiService: AiService,
+    private storageService: StorageService,
   ) {
     super();
   }
 
-  async process(job: Job) {
-    try {
-      switch (job.name) {
-        case "segment-generate-image": {
-          await this.generateImage(job.data);
-          break;
-        }
+  async handle(job: Job<QueueJob<any>>) {
+    switch (job.name) {
+      case SEGMENT_QUEUES.SPEACH: {
+        // return await this.genStorySpeach(job);
       }
-    } catch (error) {
-      console.log(error);
-      throw error;
+      case SEGMENT_QUEUES.IMAGE: {
+        // return await this.genSegmentImage(job);
+      }
     }
   }
 
-  private async generateImage(payload: {
-    storyId: string;
-    segmentId: string;
-    text: string;
-  }) {
-    try {
-      const story = await this.db.query.StoryTable.findFirst({
-        where: eq(StoryTable.id, payload.storyId),
-      });
+  private async genSegmentImage(job: Job<QueueJob<GenSegmentImage>>) {
+    const { payload } = job.data;
+    const imageId = randomUUID();
 
-      const imageId = randomUUID();
-      const imagePrompt = await this.llmService.genSegmentImagePrompt(
-        story!.context!,
-        payload.text,
-      );
-      const image = await this.llmService.genSegmentImage(imagePrompt);
-      const imageUrl = await this.s3Service.putObject(
-        payload.storyId,
-        imageId,
-        image.contentType,
-        Buffer.from(image.buffer),
-      );
+    const imagePrompt = await this.aiService.genSegmentImagePrompt(
+      payload.story.context!,
+      payload.text,
+    );
+    const image = await this.aiService.genSegmentImage(imagePrompt);
+    const imageUrl = await this.storageService.upload(
+      storageKey(payload.story.id, imageId),
+      image.contentType,
+      Buffer.from(image.buffer),
+    );
+    await this.db
+      .update(SegmentTable)
+      .set({
+        status: "completed",
+        prompt: imagePrompt,
+        imageUrl,
+      })
+      .where(eq(SegmentTable.id, payload.segmentId));
+  }
 
-      await this.db
-        .update(SegmentTable)
-        .set({
-          status: "completed",
-          prompt: imagePrompt,
-          imageUrl,
-        })
-        .where(eq(SegmentTable.id, payload.segmentId));
-    } catch (error) {
-      throw new StoryError(StoryErrorType.IMAGE_GENERATION_FAILED, error);
-    }
+  private async genStorySpeach(job: Job<QueueJob<GenSpeachJob>>) {
+    const { payload } = job.data;
+    const result = await this.aiService.genSpeach(payload.script);
+    const [speachId, subtitleId] = [randomUUID(), randomUUID()] as string[];
+
+    await Promise.all([
+      this.storageService.upload(
+        storageKey(payload.storyId, speachId),
+        result.speach.contentType,
+        result.speach.buffer,
+      ),
+      this.storageService.upload(
+        storageKey(payload.storyId, subtitleId),
+        result.subtitle.contentType,
+        result.subtitle.text,
+      ),
+    ]);
   }
 }
