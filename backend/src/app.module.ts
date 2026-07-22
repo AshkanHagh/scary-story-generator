@@ -12,6 +12,7 @@ import { stdSerializers } from "pino";
 import { QueueModule } from "./queue/queue.module";
 import { StorageModule } from "./features/storage/storage.module";
 import { AiModule } from "./features/ai/ai.module";
+import { VideoModule } from "./features/video/video.module";
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { AiModule } from "./features/ai/ai.module";
       pinoHttp: {
         autoLogging: true,
         customSuccessMessage: (req, res) =>
-          `method=${req.method} url=${req.url} status_code=${res.statusCode}`,
+          `req_id=${req.id as string} method=${req.method} url=${req.url} status_code=${res.statusCode}`,
         serializers: {
           req: () => undefined,
           res: () => undefined,
@@ -46,6 +47,7 @@ import { AiModule } from "./features/ai/ai.module";
     AiModule,
     SegmentModule,
     StoryModule,
+    VideoModule,
   ],
   providers: [
     {

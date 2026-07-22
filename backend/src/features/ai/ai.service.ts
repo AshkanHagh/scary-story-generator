@@ -60,7 +60,7 @@ export class AiService {
           Only return the final image prompt. No extra explanation or metadata.
         `,
         private: true,
-        model: "qwen-safety",
+        model: "nova-fast",
       });
     } catch (error) {
       throw new StoryError(StoryErrorType.AI_REQ_FAILED, error);
@@ -75,7 +75,7 @@ export class AiService {
             systemPrompt:
               "You're a professional visual scene designer. Based on the segment of a story provided, and an overall visual context, generate a detailed and vivid text-to-image prompt. The output should describe the visual elements of the scene clearly, including characters, setting, emotions, lighting, and overall mood. Use a photorealistic style unless specified otherwise. Keep it concise, but rich in imagery. Do not include any commentary or explanation. Just output the prompt.",
             private: true,
-            model: "qwen-safety",
+            model: "nova-fast",
           });
         },
         {

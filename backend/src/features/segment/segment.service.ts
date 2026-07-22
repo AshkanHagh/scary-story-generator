@@ -8,7 +8,7 @@ import { and, eq } from "drizzle-orm";
 import { Segment, SegmentTable, StoryTable } from "src/drizzle/schemas";
 import { StoryError, StoryErrorType } from "src/filters/exception";
 import { AiService } from "../ai/ai.service";
-import { SEGMENT_FLOW_PRODUCER, SEGMENT_QUEUE } from "src/queue/constants";
+import { FLOW_PRODUCER, SEGMENT_QUEUE } from "src/queue/constants";
 import { SEGMENT_QUEUES } from "./constants";
 import { FastifyRequest } from "fastify";
 import { withTrace } from "src/utils/queue-trace";
@@ -22,8 +22,8 @@ export type PollSegmentsStatus = {
 @Injectable()
 export class SegmentService {
   constructor(
-    @InjectFlowProducer(SEGMENT_FLOW_PRODUCER)
-    private segmentQueue: FlowProducer,
+    @InjectFlowProducer(FLOW_PRODUCER)
+    private flowProducer: FlowProducer,
     @InjectDatabase()
     private db: Database,
     private aiService: AiService,
@@ -31,17 +31,14 @@ export class SegmentService {
 
   async generateSegment(req: FastifyRequest, userId: string, storyId: string) {
     const story = await this.db.query.StoryTable.findFirst({
-      where: and(eq(StoryTable.id, storyId), eq(StoryTable.userId, userId)),
-      with: {
-        segments: true,
-      },
+      where: and(
+        eq(StoryTable.id, storyId),
+        eq(StoryTable.userId, userId),
+        eq(StoryTable.step, "initial"),
+      ),
     });
     if (!story) {
       throw new StoryError(StoryErrorType.NOT_FOUND);
-    }
-    // FIX: find a better way to stop user from infinitely generate segments
-    if (story.segments.length > 0) {
-      throw new StoryError(StoryErrorType.REQ_ALREADY_PROCESSED);
     }
     if (!story.context) {
       // lightwight ai req, this can be used as the whole ai providers in app work or not
@@ -78,7 +75,7 @@ export class SegmentService {
       await Promise.all(promise);
     });
 
-    await this.segmentQueue.addBulk([
+    await this.flowProducer.addBulk([
       ...segmentJobs,
       {
         name: SEGMENT_QUEUES.FINALIZE,
