@@ -1,18 +1,18 @@
 import { Module } from "@nestjs/common";
 import { DrizzleModule } from "./drizzle/drizzle.module";
-import { AuthModule } from "./features/auth/auth.module";
+import { AuthModule } from "./modules/auth/auth.module";
 import { APP_FILTER, APP_PIPE } from "@nestjs/core";
 import { ZodValidationExceptionFilter } from "./filters/zod-exception.filter";
 import { HttpExceptionFilter } from "./filters/http-exception.filter";
 import { ZodValidationPipe } from "nestjs-zod";
-import { SegmentModule } from "./features/segment/segment.module";
-import { StoryModule } from "./features/story/story.module";
+import { SegmentModule } from "./modules/segment/segment.module";
+import { StoryModule } from "./modules/story/story.module";
 import { LoggerModule } from "nestjs-pino";
 import { stdSerializers } from "pino";
 import { QueueModule } from "./queue/queue.module";
-import { StorageModule } from "./features/storage/storage.module";
-import { AiModule } from "./features/ai/ai.module";
-import { VideoModule } from "./features/video/video.module";
+import { StorageModule } from "./modules/storage/storage.module";
+import { AiModule } from "./modules/ai/ai.module";
+import { VideoModule } from "./modules/video/video.module";
 
 @Module({
   imports: [

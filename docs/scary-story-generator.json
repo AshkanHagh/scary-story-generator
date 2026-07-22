@@ -1,0 +1,311 @@
+{
+  "info": {
+    "name": "scary-story-generator",
+    "description": "/anonymous response:\n```bash\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MWVhYWM1Mi02NTYyLTQ4YzAtYTJkMy00YmRlZTZiYzNhNTQiLCJpYXQiOjE3NTk0OTAxMDIsImlzcyI6ImxvY2FsaG9zdCIsImV4cCI6MTc1OTUzMzMwMn0.4K1D06r64L0oWEtb91L9_-lQEtkRFMUNpBmjkjI2o7k\"\n}\n```\n\nPOST /stories response:\nGET /stories/:story_id\n```bash\n{\n  \"id\": \"f427bce8-4682-4917-99b6-12541eff859d\",\n  \"userId\": \"41eaac52-6562-48c0-a2d3-4bdee6bc3a54\",\n  \"title\": \"The Whispers Behind the Walls\",\n  \"script\": \"Ethan had always felt uneasy in his new apartment.\\nThere was something about\",\n  \"context\": null,\n  \"createdAt\": \"2025-10-03T11:17:37.903Z\",\n  \"updatedAt\": \"2025-10-03T11:17:37.903Z\"\n}\n```\n\nPOST /segments/:story_id response: NONE\n\nGET /segments/:story_id/status response: \n```bash\n{\n  \"isCompleted\": true,\n  \"segments\": [\n    {\n      \"id\": \"0012c7fc-0ea9-41d9-b205-5f669d7a8d90\",\n      \"storyId\": \"f427bce8-4682-4917-99b6-12541eff859d\",\n      \"order\": 6,\n      \"text\": \"One night, driven to the edge, Ethan decided to confront whatever haunted him.\\nHe stood before the closet, the source of the loudest whispers.\\nThe door creaked as he opened it, revealing darkness deeper than night.\\nHe stepped inside.\",\n      \"prompt\": \"A translucent, ghostly figure of a woman in a tattered white dress, floating in a dimly lit hallway with peeling wallpaper, illuminated by a flickering chandelier. The mood is haunting and melancholic, with cold blue lighting and faint mist swirling around her feet.\",\n      \"imageId\": \"b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n      \"voiceId\": \"6952ec03-8322-459f-aa44-2261c2f60328\",\n      \"videoId\": null,\n      \"imageUrl\": \"http://localhost:9000/scary-story-generator/b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n      \"status\": \"completed\",\n      \"error\": null,\n      \"createdAt\": \"2025-10-03T11:19:12.742Z\",\n      \"updatedAt\": \"2025-10-03T11:19:14.600Z\"\n    }\n  ]\n}\n```\n\nGET /segments/:story_id response:\n```bash\n[\n  {\n    \"id\": \"0012c7fc-0ea9-41d9-b205-5f669d7a8d90\",\n    \"storyId\": \"f427bce8-4682-4917-99b6-12541eff859d\",\n    \"order\": 6,\n    \"text\": \"One night, driven to the edge, Ethan decided to confront whatever haunted him.\\nHe stood before the closet, the source of the loudest whispers.\\nThe door creaked as he opened it, revealing darkness deeper than night.\\nHe stepped inside.\",\n    \"prompt\": \"A translucent, ghostly figure of a woman in a tattered white dress, floating in a dimly lit hallway with peeling wallpaper, illuminated by a flickering chandelier. The mood is haunting and melancholic, with cold blue lighting and faint mist swirling around her feet.\",\n    \"imageId\": \"b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n    \"voiceId\": \"6952ec03-8322-459f-aa44-2261c2f60328\",\n    \"videoId\": null,\n    \"imageUrl\": \"http://localhost:9000/scary-story-generator/b1196530-184f-4aa1-ac85-b79d890bf8e8\",\n    \"status\": \"completed\",\n    \"error\": null,\n    \"createdAt\": \"2025-10-03T11:19:12.742Z\",\n    \"updatedAt\": \"2025-10-03T11:19:14.600Z\"\n  },\n]\n```\n\nGET /videos response:\n```bash\n[\n  {\n    \"id\": \"3d8f3e92-0758-4ec4-a65d-20205200fce8\",\n    \"status\": \"completed\",\n    \"url\": \"http://localhost:9000/scary-story-generator/3d8f3e92-0758-4ec4-a65d-20205200fce8\",\n    \"createdAt\": \"2025-10-03T09:43:33.879Z\",\n    \"storyId\": \"ea599ac8-bbb3-42be-aa70-76a30d75fbb9\",\n    \"userId\": \"cc3bfb13-37f4-4b45-8710-dfc5eaffe337\"\n  }\n]\n```\n\nPOST /videos/:story_id response\n```bash\n{\n  \"id\": \"783f2bcc-e76b-4b72-933a-fb45724e6beb\"\n}\n```\n\nGET /videos/:video_id/status response:\n```bash\n{\n  \"id\": \"783f2bcc-e76b-4b72-933a-fb45724e6beb\",\n  \"status\": \"completed\",\n  \"url\": \"http://localhost:9000/scary-story-generator/783f2bcc-e76b-4b72-933a-fb45724e6beb\",\n  \"createdAt\": \"2025-10-03T11:27:04.967Z\",\n  \"storyId\": \"ee17cdf2-258b-4af8-9b4b-c73dc1732e2e\",\n  \"userId\": \"41eaac52-6562-48c0-a2d3-4bdee6bc3a54\"\n}\n```",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "/anonymous",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "",
+            "url": {
+              "raw": "{{BASE_URL}}/auth/anonymous",
+              "protocol": "",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "auth",
+                "anonymous"
+              ],
+              "query": [],
+              "variable": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "story",
+      "item": [
+        {
+          "name": "videos",
+          "item": [
+            {
+              "name": "/videos/",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "key": "token",
+                    "value": "{{AUTH_TOKEN}}",
+                    "type": "string"
+                  }
+                },
+                "description": "",
+                "url": {
+                  "raw": "{{BASE_URL}}/videos",
+                  "protocol": "",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "videos"
+                  ],
+                  "query": [],
+                  "variable": []
+                }
+              }
+            },
+            {
+              "name": "/videos/:story_id",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "key": "token",
+                    "value": "{{AUTH_TOKEN}}",
+                    "type": "string"
+                  }
+                },
+                "description": "",
+                "url": {
+                  "raw": "{{BASE_URL}}/videos/{{STORY_ID}}",
+                  "protocol": "",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "videos",
+                    "{{STORY_ID}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                }
+              }
+            },
+            {
+              "name": "/videos/:video_id/status",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "key": "token",
+                    "value": "{{AUTH_TOKEN}}",
+                    "type": "string"
+                  }
+                },
+                "description": "",
+                "url": {
+                  "raw": "{{BASE_URL}}/videos/c0b03822-5f4d-4724-9b9b-d2c9592a2841/status",
+                  "protocol": "",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "videos",
+                    "c0b03822-5f4d-4724-9b9b-d2c9592a2841",
+                    "status"
+                  ],
+                  "query": [],
+                  "variable": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "segments",
+          "item": [
+            {
+              "name": "/segments/:story_id",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "key": "token",
+                    "value": "{{AUTH_TOKEN}}",
+                    "type": "string"
+                  }
+                },
+                "description": "",
+                "url": {
+                  "raw": "{{BASE_URL}}/segments/{{STORY_ID}}",
+                  "protocol": "",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "segments",
+                    "{{STORY_ID}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                }
+              }
+            },
+            {
+              "name": "/segments/:story_id/status",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "key": "token",
+                    "value": "{{AUTH_TOKEN}}",
+                    "type": "string"
+                  }
+                },
+                "description": "",
+                "url": {
+                  "raw": "{{BASE_URL}}/segments/{{STORY_ID}}/status",
+                  "protocol": "",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "segments",
+                    "{{STORY_ID}}",
+                    "status"
+                  ],
+                  "query": [],
+                  "variable": []
+                }
+              }
+            },
+            {
+              "name": "GET /segments/:story_id",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "auth": {
+                  "type": "bearer",
+                  "bearer": {
+                    "key": "token",
+                    "value": "{{AUTH_TOKEN}}",
+                    "type": "string"
+                  }
+                },
+                "description": "",
+                "url": {
+                  "raw": "{{BASE_URL}}/segments/{{STORY_ID}}",
+                  "protocol": "",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "segments",
+                    "{{STORY_ID}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "/",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "key": "token",
+                "value": "{{AUTH_TOKEN}}",
+                "type": "string"
+              }
+            },
+            "description": "",
+            "url": {
+              "raw": "{{BASE_URL}}/stories",
+              "protocol": "",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "stories"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"The Carnival Beneath the Frozen Lake\",\n  \"script\": \"The Carnival Beneath the Frozen Lake\\n\\nMara found an old wooden ticket booth buried beneath the snow beside a forgotten lighthouse in northern Iceland. The lighthouse had been abandoned for seventy years, yet inside the booth was a fresh ticket with her name printed on it. The ticket said: WELCOME TO THE MIDNIGHT CARNIVAL. NO EXIT AFTER THE FIRST BELL.\\n\\nShe threw the ticket away, but seconds later it appeared inside her coat pocket. That night, glowing footprints led her through a frozen forest, across empty fields, and toward a lake that locals said had no bottom. A carnival stood on the ice. A giant Ferris wheel turned beneath the moon, a carousel played music without horses, and a cracked clown statue watched from the entrance.\\n\\nThe visitors looked normal at first. A woman sold cotton candy, children laughed near a mirror maze, and strangers played impossible games. Then Mara noticed every mirror showed empty spaces. None of the people had reflections. A tall man wearing a broken porcelain mask approached her and said her ticket had been waiting for her.\\n\\nThe masked man led Mara to a wall covered with hundreds of clocks, each frozen at a different moment from someone's life. He gave her a golden key and told her to open the final attraction. Behind the carnival was a single wooden door standing alone in the snow. When Mara opened it, she saw impossible worlds: a purple desert with a crashed spaceship, an underwater city glowing beneath endless oceans, and a floating library where every book carried her name.\\n\\nMara returned to the carnival, but everything had changed. The frozen lake disappeared, the forest vanished, and the masked man removed his porcelain mask. Underneath was Mara's own face, older and terrified. Her future self whispered that she had created the carnival long ago and escaped after losing her memories. The first bell rang, the ice began breaking, and thousands of voices beneath the lake started calling her name. Mara escaped back to the lighthouse before the carnival sank into the frozen water. The next morning, investigators found no evidence of the carnival, but they discovered one wooden door standing alone in the snow. Behind the door was a dark room filled with thousands of clocks. A new clock appeared on the wall, ticking slowly. Beneath it was the name of the person reading this story.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "/:story_id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "key": "token",
+                "value": "{{AUTH_TOKEN}}",
+                "type": "string"
+              }
+            },
+            "description": "",
+            "url": {
+              "raw": "{{BASE_URL}}/stories/{{STORY_ID}}",
+              "protocol": "",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "stories",
+                "{{STORY_ID}}"
+              ],
+              "query": [],
+              "variable": []
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "AUTH_TOKEN",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "STORY_ID",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

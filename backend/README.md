@@ -1,36 +1,51 @@
 # Scary Story Generator Backend
 
-Takes a user-submitted scary story script and turns it into a finished video — AI-generated images per segment, voiceover, burned-in subtitles, all assembled into one MP4. Built on NestJS with BullMQ handling the async pipeline underneath.
+Takes a user-submitted scary story script and turns it into a finished video — AI-generated images per segment, one voiceover and subtitle track for the whole story, assembled into an MP4. Built on NestJS with BullMQ handling the async pipeline underneath.
 
 ## What it does
 
-The whole thing runs on a queue-driven architecture because generating a video from a script is a genuinely heavy, multi-step job. A script comes in, gets split into segments, and each segment gets its own image (Replicate's Flux.1) and voiceover (OpenAI TTS), both landing in S3. Once assets exist, a separate video flow downloads them, renders subtitle-burned frames across worker threads, stitches each segment into a clip with FFmpeg, then concatenates everything into the final video. Auth is anonymous JWT — no accounts, just a token to keep access controlled — and clients poll for segment/video progress as jobs complete. Temp files live in per-job scratch directories that get cleaned up automatically, success or failure.
+A script gets split into segments, each with its own AI-generated image. Speech and subtitles are generated once for the whole story, and each segment's video length is derived from the total speech duration. Segment videos are built from still images with a zoom/pan effect, and processing stays in memory wherever possible — the only step that touches disk is final concatenation, which needs real files to stitch segments, audio, and subtitles into the finished video. Assets are pulled on demand rather than pre-staged anywhere shared, so jobs don't depend on each other's local state and can scale across workers freely.
+
+Auth is anonymous — no user accounts, just password + JWT, implemented through Passport (local + JWT strategies) to keep access controlled without full user management.
+
+Clients track generation progress by polling — short or long polling, depending on the endpoint — to get realtime status as segments and the final video complete.
+
+Cleanup is automatic on both success and failure: temp directories used during video concatenation get removed regardless of outcome, and anything left in S3 auto-expires after 24 hours, so nothing needs manual pruning.
+
+## Logging & monitoring
+
+In production, requests are logged with a request ID and a lightweight success/error outcome — enough for monitoring, not full detail. Actual errors go to Sentry, and the request ID lets you trace a failure from the logs back to its full Sentry entry. In development, errors are logged directly with full detail instead of going through Sentry.
 
 ## Tech Stack
 
-NestJS + TypeScript on Node, PostgreSQL via Drizzle ORM, BullMQ on Redis (including FlowProducer for job dependency graphs). AI: OpenAI for voice, Replicate for images. Media: FFmpeg for video/subtitles, Sharp for WebP optimization, Piscina + @napi-rs/canvas for parallel frame rendering, srt-parser-2 for subtitle timing. Storage: AWS S3. Also: zod for validation, tmp-promise for scratch dirs, jsonwebtoken for auth.
+**Framework & API** — NestJS on Fastify, with Helmet and CSRF protection
+**Database** — MySQL via Drizzle ORM
+**Queues** — BullMQ on Redis
+**Auth** — Passport (local + JWT strategies), anonymous sessions
+**AI services** — Pollinations SDK (text/image), ElevenLabs (voice), AssemblyAI (subtitles/transcription)
+**Media processing** — fluent-ffmpeg, execa
+**Logging & monitoring** — Pino (nestjs-pino), Sentry (NestJS + profiling)
+**Storage** — AWS S3
 
 ## Queue architecture
 
-Three queues, dependency-chained through FlowProducer so nothing runs before its inputs exist:
+**Segment queue**
+- `SPEACH` — generates the story's full voiceover and subtitles, and computes per-segment video duration from total speech length.
+- `IMAGE` — generates a prompt and image per segment, uploads it, marks the segment complete.
 
-**Story queue** generates context from the script, splits it into segments, then fans out image/voice jobs per segment. `story.generate.segment.image` prompts Replicate, resizes with Sharp, uploads to S3; `story.generate.segment.voice` does the same via OpenAI for audio. Segments get marked complete as their assets land.
-
-**Image queue** just pulls the finished S3 assets back down to disk — triggered as a child job once the video flow needs them.
-
-**Video queue** does the assembly: `video.generate.segment.frame` pulls word timestamps, builds SRT subtitles, and farms frame rendering out to Piscina workers; `video.generate.video` runs FFmpeg to combine frames + audio + burned-in subtitles into a segment MP4; `video.combine.videos` concatenates all segments in order and uploads the final file.
-
-The flow tree is rooted at `COMBINE_VIDEOS`, branching down through per-segment `GENERATE_VIDEO` → `GENERATE_SEGMENT_FRAME` → `DOWNLOAD_ASSETS`, so a segment's video can't start rendering before its frames exist, and combine can't run before every segment is done. Story assets have to be fully in S3 before the video flow even starts. Workers run at concurrency 4; Piscina grabs all available cores for frame rendering. Failures propagate up with DB status updates and temp-dir cleanup at every level.
+**Video queue**
+- `VIDEO` — turns a segment's image into a short video with a zoom/pan effect.
+- `VIDEO_CONCAT` — stitches all segment videos together with speech and burned-in subtitles into the final video.
+- `FINALIZE` — marks the video and story as complete once concatenation succeeds.
 
 ## Getting started
 
+You'll need an S3 bucket with public read access set up beforehand, since generated images/videos are served directly from bucket URLs.
+
 ```bash
-cp .env.example .env   # fill in DB, Redis, AWS creds, API keys, JWT secret
-pnpm install
-docker-compose up -d
-pnpm run db:generate
-pnpm run db:migrate
-pnpm run start:dev
+docker compose up -d   # fill in .env first
+pnpm db:push
+pnpm start:dev
 ```
 
 ## What's next
@@ -39,4 +54,5 @@ pnpm run start:dev
 - 9:16 and other aspect ratios, configurable through prompts/FFmpeg
 - Real auth beyond anonymous JWT
 - Stripe for usage limits / subscriptions
-- Tuning prompts specifically for horror rather than generic story generation
+- Tune prompts specifically for horror rather than generic story generation
+- Better FFmpeg video generation and tighter subtitle/audio sync and quality
