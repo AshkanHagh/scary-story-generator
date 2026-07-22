@@ -5,11 +5,12 @@ import { FLOW_PRODUCER, VIDEO_QUEUE } from "src/queue/constants";
 import { InjectDatabase } from "src/drizzle/constants";
 import { Database } from "src/drizzle/types";
 import { and, eq } from "drizzle-orm";
-import { StoryTable, VideoTable } from "src/drizzle/schemas";
+import { StoryTable, Video, VideoTable } from "src/drizzle/schemas";
 import { StoryError, StoryErrorType } from "src/filters/exception";
 import { VIDEO_QUEUES } from "./constants";
 import { withTrace } from "src/utils/queue-trace";
 import { FastifyRequest } from "fastify";
+import { pollUntil } from "src/utils/poll";
 
 @Injectable()
 export class VideoService {
@@ -71,54 +72,28 @@ export class VideoService {
     return videoId;
   }
 
-  // async pollStoryVideoStatus(
-  //   userId: string,
-  //   videoId: string,
-  // ): Promise<IVideoRecord> {
-  //   const pollInterval = 1000 * 1;
+  async pollStoryVideoStatus(userId: string, videoId: string) {
+    const fetchFn = async () => {
+      const video = await this.db.query.VideoTable.findFirst({
+        where: and(eq(VideoTable.id, videoId), eq(VideoTable.userId, userId)),
+      });
+      if (!video) {
+        throw new StoryError(StoryErrorType.NOT_FOUND);
+      }
+      return video;
+    };
+    const shouldResolve = (video: Video) => {
+      return video.status !== "pending";
+    };
+    return await pollUntil(fetchFn, shouldResolve, {
+      interval: 1000,
+      timeout: 1000 * 30,
+    });
+  }
 
-  //   const fetchFn = async () => {
-  //     const video = await this.repo.video().find(videoId);
-  //     if (video.userId !== userId) {
-  //       throw new StoryError(StoryErrorType.HasNoPermission);
-  //     }
-
-  //     const videoRecord: IVideoRecord = {
-  //       id: video.id,
-  //       status: video.status,
-  //       url: video.url,
-  //       createdAt: video.createdAt,
-  //       storyId: video.storyId,
-  //       userId: video.userId,
-  //     };
-  //     return videoRecord;
-  //   };
-
-  //   const shouldResolve = (video: IVideoRecord) => {
-  //     const hasChange = video.status !== "pending";
-  //     return hasChange;
-  //   };
-
-  //   return await pollUntil(fetchFn, shouldResolve, {
-  //     pollInterval,
-  //   });
-  // }
-
-  // async userVideos(userId: string): Promise<IVideoRecord[]> {
-  //   const videos = await this.repo.video().findAllByUserId(userId);
-  //   if (videos.length === 0) {
-  //     return [];
-  //   }
-
-  //   const videoRecords: IVideoRecord[] = videos.map((video) => ({
-  //     id: video.id,
-  //     status: video.status,
-  //     url: video.url,
-  //     createdAt: video.createdAt,
-  //     storyId: video.storyId,
-  //     userId: video.userId,
-  //   }));
-
-  //   return videoRecords;
-  // }
+  async userVideos(userId: string) {
+    return await this.db.query.VideoTable.findMany({
+      where: eq(VideoTable.userId, userId),
+    });
+  }
 }

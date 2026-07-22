@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Param,
   ParseUUIDPipe,
   Post,
@@ -26,17 +27,16 @@ export class VideoController {
     return { id: videoId };
   }
 
-  // @Get("/:video_id/status")
-  // async pollStoryVideoStatus(
-  //   @User("id") userId: string,
-  //   @Param("video_id", new ParseUUIDPipe()) storyId: string,
-  // ): Promise<IVideoRecord> {
-  //   return await this.videoService.pollStoryVideoStatus(userId, storyId);
-  // }
+  @Get("/:video_id/status")
+  async pollStoryVideoStatus(
+    @UserId() userId: string,
+    @Param("video_id", new ParseUUIDPipe()) storyId: string,
+  ) {
+    return await this.videoService.pollStoryVideoStatus(userId, storyId);
+  }
 
-  // @Get("/")
-  // async userVideos(@User("id") userId: string): Promise<IVideoRecord[]> {
-  //   console.log(await this.videoService.userVideos(userId));
-  //   return await this.videoService.userVideos(userId);
-  // }
+  @Get("/")
+  async userVideos(@UserId() userId: string) {
+    return await this.videoService.userVideos(userId);
+  }
 }
